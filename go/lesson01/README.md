@@ -1,4 +1,4 @@
-# OpenTracing Tutorial - Lesson01 - Hello World
+# Lesson 1 - Hello World
 
 ## Objectives
 
@@ -39,7 +39,7 @@ Hello, Bryan!
 ### Create a trace
 
 A trace is a directed acyclic graph of spans. A span is a logical representation of some work done in your application.
-Each span has an operation name, a start time, and finish time.
+Each span has these minimum attributes: an operation name, a start time, and a finish time.
 
 Let's create a trace that consists of just a single span. To do that we need an instance of the `opentracing.Tracer`.
 We can use a global instance returned by `opentracing.GlobalTracer()`.
@@ -117,16 +117,16 @@ more general operation names is to allow the tracing systems to do aggregations.
 has an option of emitting RPC metrics for all the traffic going through the application. Having a unique
 operation name for each span would make the metrics useless.
 
-The recommended solution is to annotation spans with tags or logs. A span tag is a key-value pair that provides
-certain metadata about the span. A span log is pretty much the same as a regular log statement, it contains
+The recommended solution is to annotate spans with tags or logs. A span _tag_ is a key-value pair that provides
+certain metadata about the span. A span _log_ is pretty much the same as a regular log statement, it contains
 a timestamp and some data.
 
-When should use use tags vs. logs?  The tags are meant to describe attributes of the span that are not
+When should we use tags vs. logs?  The tags are meant to describe attributes of the span that are not
 associated with any timestamp. For example, if a span represents an HTTP request, then the URL of the
 request should be recorded as a tag because it does not make sense to think of the URL as something
 that's relevant at different times of the span duration. On the other hand, if the server responded
 with a redirect, logging it would make more sense since there is a clear timestamp associated with such
-event. The OpenTracing Specification provides guidelines called (Semantic Conventions)[semantic-conventions]
+event. The OpenTracing Specification provides guidelines called [Semantic Conventions][semantic-conventions]
 for recommended tags and log fields.
 
 #### Using Tags
@@ -160,7 +160,7 @@ The log statements might look a bit strange if you have not previosuly worked wi
 Rather than formatting a log message into a single string that is easy for humans to read, structured
 logging APIs encourage you to separate bits and pieces of that message into key-value pairs that can be
 automatically processed by log aggregation systems. The idea comes from the realization that today most
-logs are processed by machines rather than humans. Just google [structured-logging][google-logging]
+logs are processed by machines rather than humans. Just [google structured-logging][google-logging]
 for many articles on this topic.
 
 The OpenTracing API for Go exposes structured logging API in two flavors:
@@ -168,11 +168,11 @@ The OpenTracing API for Go exposes structured logging API in two flavors:
   * The `LogKV` function kayes an alternating list of `key,value,key,value` pairs (easier to use)
 
 The OpenTracing Specification also recommends all log statements to contain an `event` field that
-describes the overall event being logged, wither other attributes of the event provided as other fields.
+describes the overall event being logged, with other attributes of the event provided as additional fields.
 
 ## Conclusion
 
-The complete program can be found in the (solution)[./solution] package.
+The complete program can be found in the [solution[(./solution) package.
 The only difference is we replaced `initJaeger` function with `jaeger.Init` helper function
 so that we can reuse it in the other lessons.
 
