@@ -16,15 +16,15 @@ Let's create a simple Go program `lesson01/hello.go` that takes an argument and 
 package main
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		panic("ERROR: Expecting one argument")
-	}
-	helloTo := os.Args[1]
+    if len(os.Args) != 2 {
+        panic("ERROR: Expecting one argument")
+    }
+    helloTo := os.Args[1]
     helloStr := fmt.Sprintf("Hello, %s!", helloTo)
     println(helloStr)
 }
@@ -52,29 +52,45 @@ println(helloStr)
 span.Finish()
 ```
 
-If we run this program, we will see no difference, and no traces in the tracing UI.
-That's because by default `opentracing.GlobalTracer()` returns a no-op tracer.
+We are using the following basic features of the OpenTracing API"
+  * a tracer instance is used to start new spans via `StartSpan` function
+  * each span is given an _operation name_, `"say-hello"` in this case
+  * each span must be finished by calling its `Finish()` function
+  * the start and end timestamps of the span will be captured automatically by the tracer implementation
+
+However, if we run this program, we will see no difference, and no traces in the tracing UI.
+That's because the function `opentracing.GlobalTracer()` returns a no-op tracer by default.
 
 ### Initialize a real tracer
 
 Let's instantiate an instance of a real tracer, such as Jaeger (http://github.com/uber/jaeger-client-go).
 
 ```go
+import (
+	"fmt"
+	"io"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	jaeger "github.com/uber/jaeger-client-go"
+	config "github.com/uber/jaeger-client-go/config"
+)
+
+// initJaeger returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
 func initJaeger(service string) (opentracing.Tracer, io.Closer) {
-	cfg := &config.Configuration{
-		Sampler: &config.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &config.ReporterConfig{
-			LogSpans: true,
-		},
-	}
-	tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
-	if err != nil {
-		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
-	}
-	return tracer, closer
+    cfg := &config.Configuration{
+        Sampler: &config.SamplerConfig{
+            Type:  "const",
+            Param: 1,
+        },
+        Reporter: &config.ReporterConfig{
+            LogSpans: true,
+        },
+    }
+    tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
+    if err != nil {
+        panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+    }
+    return tracer, closer
 }
 ```
 
@@ -108,7 +124,7 @@ Right now the trace we can find in the UI is very bare-bones. If we call our pro
 instead of `hello.go Bryan`, the resulting traces will be nearly identical. It would be nice if we could
 capture the program arguments in the traces to distinguish them.
 
-One naive way to do it is to use the actual hello string that we print out as the `operationName` of the span.
+One naive way is to use the string `"Hello, Bryan!"` as the _operation name_ of the span, instead of `"say-hello"`.
 However, such practice is highly discouraged in distributed tracing, because the operation name is meant to
 represent a _class of spans_, rather than a unique instance. For example, in Jaeger UI you can select the
 operation name from a dropdown when searching for traces. It would be very bad user experience if we run the
@@ -172,7 +188,7 @@ describes the overall event being logged, with other attributes of the event pro
 
 ## Conclusion
 
-The complete program can be found in the [solution[(./solution) package.
+The complete program can be found in the [solution](./solution) package.
 The only difference is we replaced `initJaeger` function with `jaeger.Init` helper function
 so that we can reuse it in the other lessons.
 

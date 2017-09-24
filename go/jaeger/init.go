@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	jaeger "github.com/uber/jaeger-client-go"
-	"github.com/uber/jaeger-client-go/config"
+	config "github.com/uber/jaeger-client-go/config"
 )
 
-// Init returns an instance of Jaeger Tracer
+// Init returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
 func Init(service string) (opentracing.Tracer, io.Closer) {
 	cfg := &config.Configuration{
 		Sampler: &config.SamplerConfig{
