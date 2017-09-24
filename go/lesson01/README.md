@@ -190,5 +190,7 @@ describes the overall event being logged, with other attributes of the event pro
 The complete program can be found in the [solution](./solution) package. We moved the `initJaeger`
 helper function into its own package so that we can reuse it in the other lessons as `jaeger.Init`.
 
+Next lesson: [Context and Tracing Functions](../lesson02).
+
 [semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md
 [google-logging]: https://www.google.com/search?q=structured-logging
