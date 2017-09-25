@@ -22,5 +22,7 @@ The tutorials are using CNCF Jaeger (https://github.com/jaegertracing/jaeger) as
 * [Lesson 03 - Tracing RPC Requests](lesson03)
   * Trace a transaction across more than one microservice
   * Pass the context between processes using `Inject` and `Extract`
-  * Apply special `span.kind` and standard HTTP tags
+  * Apply OpenTracing-recommended tags
 * [Lesson 04 - Baggage](lesson04)
+  * Understand distributed context propagation
+  * Use baggage to pass data through the call graph

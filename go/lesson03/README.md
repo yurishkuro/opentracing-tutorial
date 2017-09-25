@@ -6,7 +6,7 @@ Learn how to:
 
 * Trace a transaction across more than one microservice
 * Pass the context between processes using `Inject` and `Extract`
-* Apply special `span.kind` and standard HTTP tags
+* Apply OpenTracing-recommended tags
 
 ## Walkthrough
 
