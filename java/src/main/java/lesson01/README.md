@@ -12,9 +12,18 @@ Learn how to:
 
 ### A simple Hello-World program
 
-Let's create a simple Go program `lesson01/hello.go` that takes an argument and prints "Hello, {arg}!". 
+Let's create a simple Java program `lesson01/Hello.java` that takes an argument and prints "Hello, {arg}!". 
 
-```go
+```java
+public class Hello {
+
+    public static void main(String[] args) {
+        System.out.println("Hello, World");
+    }
+
+}
+
+
 package main
 
 import (
