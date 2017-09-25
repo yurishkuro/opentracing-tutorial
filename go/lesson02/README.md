@@ -13,7 +13,7 @@ Learn how to:
 ### Tracing individual functions
 
 In [Lesson 1](../lesson01) we wrote a program that creates a trace that consists of a single span.
-That single span combined two operations performed by the propgram, formatting the output string
+That single span combined two operations performed by the program, formatting the output string
 and printing it. Let's move those operations into standalone functions first:
 
 ```go
@@ -104,7 +104,7 @@ The label, or `ReferenceType`, describes the nature of the relationship. `ChildO
 means that the `rootSpan` has a logical dependency on the child `span` before `rootSpan` can
 complete its operation. Another standard reference type in OpenTracing is `FollowsFrom`, which
 means the `rootSpan` is the ancestor in the DAG, but it does not depend on the completion of the
-child span.
+child span, for example if the child represents a best-effort, fire-and-forget cache write.
 
 If we modify the `printHello` function accordingly and run the app, we'll see that all reported
 spans now belong to the same trace:

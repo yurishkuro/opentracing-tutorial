@@ -22,13 +22,13 @@ The package is organized as follows:
   * `formatter/formatter.go` is an HTTP server that responds to a request like
     `GET 'http://localhost:8081/format?helloTo=Bryan'` and returns `"Hello, Bryan!"` string
   * `publisher/publisher.go` is another HTTP server that responds to requests like
-     `GET 'http://localhost:8082/publish?helloStr=hi%20there'` and prints "hi there" string to stdout.
+     `GET 'http://localhost:8082/publish?helloStr=hi%20there'` and prints `"hi there"` string to stdout.
 
 To test it out, run the formatter and publisher services in separate terminals
 
 ```
-$ go run go/lesson03/exercise/formatter/formatter.go
-$ go run go/lesson03/exercise/publisher/publisher.go
+$ go run ./lesson03/exercise/formatter/formatter.go
+$ go run ./lesson03/exercise/publisher/publisher.go
 ```
 
 Execute an HTTP request against the formatter:
@@ -44,12 +44,12 @@ Execute and HTTP request against the publisher:
 $ curl 'http://localhost:8082/publish?helloStr=hi%20there'
 ```
 
-Note that there will be no output from `curl`, but the publisher stdout will print `"hi there"`.
+Note that there will be no output from `curl`, but the publisher stdout will show `"hi there"`.
 
 Finally, if we run the client app as we did in the previous lessons:
 
 ```
-$ go run go/lesson03/solution/client/hello.go Bryan
+$ go run ./lesson03/exercise/client/hello.go Bryan
 2017/09/24 21:43:33 Initializing logging reporter
 2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:5d10cdd1a9cf004a:7af6719d92c3df6d:1
 2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:538a7bfd34893922:7af6719d92c3df6d:1
@@ -62,14 +62,14 @@ We will see the publisher printing the line `"Hello, Bryan!"`.
 
 Since the only change we made in the `hello.go` app was to replace two operations with HTTP calls,
 the tracing story remains the same - we get a trace with three spans, all from `hello-world` service.
-But now we have two more microservices participating in the transaction and we want to se them
+But now we have two more microservices participating in the transaction and we want to see them
 in the trace as well. In order to continue the trace over the process boundaries and RPC calls,
 we need a way to propagate the span context over the wire. The OpenTracing API provides two functions
 in the Tracer interface to do that, `Inject(spanContext, format, carrier)` and `Extract(format, carrier)`.
 
 The `format` parameter refers to one of the three standard encodings the OpenTracing API defines:
-  * TextMap where span context is represented as a collection of string key-value pairs,
-  * Binary where span context is represented as an opaque byte array,
+  * TextMap where span context is encoded as a collection of string key-value pairs,
+  * Binary where span context is encoded as an opaque byte array,
   * HTTPHeaders, which is similar to TextMap except that the keys must be safe to be used as HTTP headers.
 
 The `carrier` is an abstraction over the underlying RPC framework. For example, a carrier for TextMap
@@ -96,7 +96,7 @@ span.Tracer().Inject(
 
 In this case the `carrier` is HTTP request headers object, which we adapt to the carrier API
 by wrapping in `opentracing.HTTPHeadersCarrier()`. Notice that we also add a couple additional
-tags to the span with some metadata about the HTTP request, and marking the span with a
+tags to the span with some metadata about the HTTP request, and we mark the span with a
 `span.kind=client` tag, as recommended by the OpenTracing
 [Semantic Conventions][semantic-conventions]. There are other tags we could add.
 
@@ -156,19 +156,19 @@ Then run the `client/hello.go`. You should see the outputs like this:
 
 ```
 # client
-$ go run go/lesson03/solution/client/hello.go Bryan
+$ go run ./lesson03/exercise/client/hello.go Bryan
 2017/09/24 16:36:06 Initializing logging reporter
 2017/09/24 16:36:06 Reporting span 731020308bd6d05d:3535cabe610946bb:731020308bd6d05d:1
 2017/09/24 16:36:06 Reporting span 731020308bd6d05d:4ef2c9b5523bca3b:731020308bd6d05d:1
 2017/09/24 16:36:06 Reporting span 731020308bd6d05d:731020308bd6d05d:0:1
 
 # formatter
-$ go run go/lesson03/solution/formatter/formatter.go
+$ go run ./lesson03/exercise/formatter/formatter.go
 2017/09/24 16:35:56 Initializing logging reporter
 2017/09/24 16:36:06 Reporting span 731020308bd6d05d:48394b5372417ee4:3535cabe610946bb:1
 
 # publisher
-$ go run go/lesson03/solution/publisher/publisher.go
+$ go run ./lesson03/exercise/publisher/publisher.go
 2017/09/24 16:35:59 Initializing logging reporter
 Hello, Bryan!
 2017/09/24 16:36:06 Reporting span 731020308bd6d05d:37908db2de452ea2:4ef2c9b5523bca3b:1
