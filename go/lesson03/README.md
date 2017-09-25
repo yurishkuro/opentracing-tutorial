@@ -1,5 +1,13 @@
 # Lesson 3 - Tracing RPC Requests
 
+## Objectives
+
+Learn how to:
+
+* Trace a transaction across more than one microservice
+* Pass the context between processes using `Inject` and `Extract`
+* Apply special `span.kind` and standard HTTP tags
+
 ## Walkthrough
 
 ### Hello-World Microservice App
@@ -76,6 +84,7 @@ In the `formatString` function we already create a child span. In order to pass 
 request we need to call `Inject` on the tracer:
 
 ```go
+ext.SpanKindRPCClient.Set(span)
 ext.HTTPUrl.Set(span, url)
 ext.HTTPMethod.Set(span, "GET")
 span.Tracer().Inject(
@@ -87,7 +96,8 @@ span.Tracer().Inject(
 
 In this case the `carrier` is HTTP request headers object, which we adapt to the carrier API
 by wrapping in `opentracing.HTTPHeadersCarrier()`. Notice that we also add a couple additional
-tags to the span with some metadata about the HTTP request, as recommended by the OpenTracing
+tags to the span with some metadata about the HTTP request, and marking the span with a
+`span.kind=client` tag, as recommended by the OpenTracing
 [Semantic Conventions][semantic-conventions]. There are other tags we could add.
 
 We need to add similar code to the `printHello` function.
@@ -100,10 +110,10 @@ Our servers are currently not instrumented for tracing. We need to do the follow
 
 ```go
 import (
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	otlog "github.com/opentracing/opentracing-go/log"
-	"github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
+    opentracing "github.com/opentracing/opentracing-go"
+    "github.com/opentracing/opentracing-go/ext"
+    otlog "github.com/opentracing/opentracing-go/log"
+    "github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
 )
 ```
 
@@ -122,6 +132,9 @@ spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCar
 
 #### Start a new child span representing the work of the server
 
+We use a special option `RPCServerOption` that creates a `ChildOf` reference to the passed `spanCtx`
+as well as sets a `span.kind=server` tag on the new span.
+
 ```go
 span := tracer.StartSpan("format", ext.RPCServerOption(spanCtx))
 defer span.Finish()
@@ -135,6 +148,11 @@ span.LogFields(
     otlog.String("value", helloStr),
 )
 ```
+
+### Take It For s Spin
+
+As before, first run the `formatter` and `publisher` apps in separate terminals.
+Then run the `client/hello.go`. You should see the outputs like this:
 
 ```
 # client
@@ -156,6 +174,13 @@ Hello, Bryan!
 2017/09/24 16:36:06 Reporting span 731020308bd6d05d:37908db2de452ea2:4ef2c9b5523bca3b:1
 ```
 
+Note how all recorded spans show the same trace ID `731020308bd6d05d`. This is a sign
+of correct instrumentation. It is also a very useful debugging approach when something
+is wrong with tracing. A typical error is to miss the context propagation somwehere,
+either in-process or inter-process, which results in different trace IDs and broken
+traces.
+
+If we open this trace in the UI, we should see all five spans.
 
 ## Conclusion
 

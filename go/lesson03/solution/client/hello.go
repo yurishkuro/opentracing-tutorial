@@ -46,6 +46,7 @@ func formatString(ctx context.Context, helloTo string) string {
 		panic(err.Error())
 	}
 
+	ext.SpanKindRPCClient.Set(span)
 	ext.HTTPUrl.Set(span, url)
 	ext.HTTPMethod.Set(span, "GET")
 	span.Tracer().Inject(
@@ -81,6 +82,7 @@ func printHello(ctx context.Context, helloStr string) {
 		panic(err.Error())
 	}
 
+	ext.SpanKindRPCClient.Set(span)
 	ext.HTTPUrl.Set(span, url)
 	ext.HTTPMethod.Set(span, "GET")
 	span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
