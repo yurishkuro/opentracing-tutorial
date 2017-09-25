@@ -15,7 +15,7 @@ func main() {
 
 	http.HandleFunc("/publish", func(w http.ResponseWriter, r *http.Request) {
 		spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-		span := tracer.StartSpan("publisher", ext.RPCServerOption(spanCtx))
+		span := tracer.StartSpan("publish", ext.RPCServerOption(spanCtx))
 		defer span.Finish()
 
 		helloStr := r.FormValue("helloStr")
