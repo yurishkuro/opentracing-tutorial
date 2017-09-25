@@ -7,7 +7,7 @@ This repository uses [glide](https://github.com/Masterminds/glide) to manage dep
 All dependencies can be installed by running `make install`.
 
 The tutorials are using CNCF Jaeger (https://github.com/jaegertracing/jaeger) as the tracing backend, 
-[see here](../) how to install it in a Docker image.
+[see here](../README.md) how to install it in a Docker image.
 
 ## Lessons
 
