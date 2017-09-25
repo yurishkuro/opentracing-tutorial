@@ -6,11 +6,11 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
+	"github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
 )
 
 func main() {
-	tracer, closer := jaeger.Init("publisher")
+	tracer, closer := tracing.Init("publisher")
 	defer closer.Close()
 
 	http.HandleFunc("/publish", func(w http.ResponseWriter, r *http.Request) {

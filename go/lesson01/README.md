@@ -188,7 +188,7 @@ describes the overall event being logged, with other attributes of the event pro
 ## Conclusion
 
 The complete program can be found in the [solution](./solution) package. We moved the `initJaeger`
-helper function into its own package so that we can reuse it in the other lessons as `jaeger.Init`.
+helper function into its own package so that we can reuse it in the other lessons as `tracing.Init`.
 
 Next lesson: [Context and Tracing Functions](../lesson02).
 

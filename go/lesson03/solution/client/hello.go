@@ -10,7 +10,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/yurishkuro/opentracing-tutorial/go/lib/http"
-	"github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
+	"github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 		panic("ERROR: Expecting one argument")
 	}
 
-	tracer, closer := jaeger.Init("hello-world")
+	tracer, closer := tracing.Init("hello-world")
 	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
 

@@ -171,7 +171,7 @@ And one last thing. The `StartSpanFromContext` function uses `opentracing.Global
 new spans, so we need to initialize that global variable to our instance of Jaeger tracer:
 
 ```go
-tracer, closer := jaeger.Init("hello-world")
+tracer, closer := tracing.Init("hello-world")
 defer closer.Close()
 opentracing.SetGlobalTracer(tracer)
 ```

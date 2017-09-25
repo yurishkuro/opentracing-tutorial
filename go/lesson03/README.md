@@ -113,14 +113,14 @@ import (
     opentracing "github.com/opentracing/opentracing-go"
     "github.com/opentracing/opentracing-go/ext"
     otlog "github.com/opentracing/opentracing-go/log"
-    "github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
+    "github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
 )
 ```
 
 #### Create an instance of a Tracer, similar to how we did it in `hello.go`
 
 ```go
-tracer, closer := jaeger.Init("formatter")
+tracer, closer := tracing.Init("formatter")
 defer closer.Close()
 ```
 

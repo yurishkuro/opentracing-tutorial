@@ -8,11 +8,11 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	otlog "github.com/opentracing/opentracing-go/log"
-	"github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
+	"github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
 )
 
 func main() {
-	tracer, closer := jaeger.Init("formatter")
+	tracer, closer := tracing.Init("formatter")
 	defer closer.Close()
 
 	http.HandleFunc("/format", func(w http.ResponseWriter, r *http.Request) {
