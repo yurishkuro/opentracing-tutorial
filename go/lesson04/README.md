@@ -12,7 +12,7 @@ It is not hard to see that this process can be generalized to propagating more t
 With OpenTracing instrumentation in place, we can support general purpose _distributed context propagation_
 where we associate some metadata with the transaction and make that metadata available anywhere in the
 distributed call graph. In OpenTracing this metadata is called _baggage_, to highlight the fact that
-it is carried over in-band with all RPC requests like baggage.
+it is carried over in-band with all RPC requests, just like baggage.
 
 To see how it works in OpenTracing, let's take the application we built in Lesson 3. You can copy the source
 code from [../lesson03/solution](../lesson03/solution) package:
@@ -21,12 +21,12 @@ code from [../lesson03/solution](../lesson03/solution) package:
 cp -r ./lesson03/solution ./lesson04/exercise
 ```
 
-The `formatter` services takes the `helloTo` parameter and returns a string `Hello, {name}!`. Let's modify
+The `formatter` service takes the `helloTo` parameter and returns a string `Hello, {helloTo}!`. Let's modify
 it so that we can customize the greeting too, but without modifying the public API of that service.
 
 ### Set Baggage in the Client
 
-Let's add the following code to `client/hello.go`:
+Let's add/replace the following code to `client/hello.go`:
 
 ```go
 if len(os.Args) != 3 {
@@ -98,7 +98,7 @@ Some of the possible applications of baggage include:
   * passing request-scoped dimensions for other monitoring data, like separating metrics for prod vs. test traffic
 
 
-### No Free Lunch
+### Now, a Warning... NOW a Warning?
 
 Of course, while baggage is extermely powerful mechanism, it is also dangerous. If we store a 1Mb value/string
 in baggage, every request in the call graph below that point will have to carry that 1Mb of data. So baggage
