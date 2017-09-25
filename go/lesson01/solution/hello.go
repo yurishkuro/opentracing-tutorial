@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/yurishkuro/opentracing-tutorial/go/jaeger"
+	"github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
 )
 
 func main() {

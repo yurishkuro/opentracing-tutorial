@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/yurishkuro/opentracing-tutorial/go/lib/http"
 	"github.com/yurishkuro/opentracing-tutorial/go/lib/jaeger"
 )
 
@@ -35,7 +37,19 @@ func formatString(ctx context.Context, helloTo string) string {
 	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
 
-	helloStr := fmt.Sprintf("Hello, %s!", helloTo)
+	v := url.Values{}
+	v.Set("helloTo", helloTo)
+	req, err := http.NewRequest("GET", "http://localhost:8081/format?"+v.Encode(), nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	resp, err := xhttp.Do(req)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	helloStr := string(resp)
+
 	span.LogFields(
 		log.String("event", "string-format"),
 		log.String("value", helloStr),
@@ -48,6 +62,13 @@ func printHello(ctx context.Context, helloStr string) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "printHello")
 	defer span.Finish()
 
-	println(helloStr)
-	span.LogKV("event", "println")
+	v := url.Values{}
+	v.Set("helloStr", helloStr)
+	req, err := http.NewRequest("GET", "http://localhost:8082/publish?"+v.Encode(), nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	if _, err := xhttp.Do(req); err != nil {
+		panic(err.Error())
+	}
 }
