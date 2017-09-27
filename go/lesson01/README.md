@@ -185,6 +185,9 @@ The OpenTracing API for Go exposes structured logging API in two flavors:
 The OpenTracing Specification also recommends all log statements to contain an `event` field that
 describes the overall event being logged, with other attributes of the event provided as additional fields.
 
+If you run the program with these changes, then find the trace in the UI and expand its span (by clicking on it),
+you will be able to see the tags and logs.
+
 ## Conclusion
 
 The complete program can be found in the [solution](./solution) package. We moved the `initJaeger`

@@ -33,7 +33,7 @@ public class Hello {
 
 Run it: 
 ```
-$ ./run.sh lesson01.solution.Hello Bryan
+$ ./run.sh lesson01.exercise.Hello Bryan
 Hello, Bryan!
 ```
 
@@ -114,10 +114,10 @@ the tracer as originating from a `hello-world` service.
 If we run the program now, we should see a span logged:
 
 ```
-$ ./run.sh lesson01.solution.Hello Bryan
-[lesson01.solution.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+$ ./run.sh lesson01.exercise.Hello Bryan
+[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
 Hello, Bryan!
-[lesson01.solution.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
+[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
 ```
 
 If you have Jaeger backend running, you should be able to see the trace in the UI.
@@ -186,6 +186,9 @@ which takes an alternating list of `key1,value1,key2,value2` pairs.
 
 The OpenTracing Specification also recommends all log statements to contain an `event` field that
 describes the overall event being logged, with other attributes of the event provided as additional fields.
+
+If you run the program with these changes, then find the trace in the UI and expand its span (by clicking on it),
+you will be able to see the tags and logs.
 
 ## Conclusion
 
