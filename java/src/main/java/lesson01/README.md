@@ -12,104 +12,100 @@ Learn how to:
 
 ### A simple Hello-World program
 
-Let's create a simple Java program `lesson01/Hello.java` that takes an argument and prints "Hello, {arg}!". 
+Let's create a simple Java program `lesson01/exercise/Hello.java` that takes an argument and prints `"Hello, {arg}!"`.
 
 ```java
+package lesson01.exercise;
+
 public class Hello {
 
     public static void main(String[] args) {
-        System.out.println("Hello, World");
+        if (args.length != 1) {
+            throw new IllegalArgumentException("Expecting one argument");
+        }
+        String helloTo = args[0];
+        String helloStr = String.format("Hello, %s!", helloTo);
+        System.out.println(helloStr);
     }
 
-}
-
-
-package main
-
-import (
-    "fmt"
-    "os"
-)
-
-func main() {
-    if len(os.Args) != 2 {
-        panic("ERROR: Expecting one argument")
-    }
-    helloTo := os.Args[1]
-    helloStr := fmt.Sprintf("Hello, %s!", helloTo)
-    println(helloStr)
 }
 ```
 
 Run it: 
 ```
-$ go run ./lesson01/hello.go Bryan
+$ ./run.sh lesson01.solution.Hello Bryan
 Hello, Bryan!
 ```
+
+Here we're using a simple helper script `run.sh` that executes a class via Maven,
+as well as strips out some of it diagnostic logging.
 
 ### Create a trace
 
 A trace is a directed acyclic graph of spans. A span is a logical representation of some work done in your application.
 Each span has these minimum attributes: an operation name, a start time, and a finish time.
 
-Let's create a trace that consists of just a single span. To do that we need an instance of the `opentracing.Tracer`.
-We can use a global instance returned by `opentracing.GlobalTracer()`.
+Let's create a trace that consists of just a single span. To do that we need an instance of the `io.opentracing.Tracer`.
+We can use a global instance returned by `io.opentracing.util.GlobalTracer.get()`.
 
-```go
-tracer := opentracing.GlobalTracer()
+```java
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
 
-span := tracer.StartSpan("say-hello")
-println(helloStr)
-span.Finish()
+Tracer tracer = GlobalTracer.get();
+Span span = tracer.buildSpan("say-hello").startManual();
+
+String helloStr = String.format("Hello, %s!", helloTo);
+System.out.println(helloStr);
+
+span.finish();
 ```
 
 We are using the following basic features of the OpenTracing API:
-  * a `tracer` instance is used to start new spans via `StartSpan` function
+  * a `tracer` instance is used to create a span builder via `buildSpan()`
   * each `span` is given an _operation name_, `"say-hello"` in this case
-  * each `span` must be finished by calling its `Finish()` function
+  * builder is used to create a span via `startManual()`
+  * each `span` must be finished by calling its `finish()` function
   * the start and end timestamps of the span will be captured automatically by the tracer implementation
 
 However, if we run this program, we will see no difference, and no traces in the tracing UI.
-That's because the function `opentracing.GlobalTracer()` returns a no-op tracer by default.
+That's because the function `GlobalTracer.get()` returns a no-op tracer by default.
 
 ### Initialize a real tracer
 
-Let's create an instance of a real tracer, such as Jaeger (http://github.com/uber/jaeger-client-go).
+Let's create an instance of a real tracer, such as Jaeger (http://github.com/uber/jaeger-client-java).
+Our `pom.xml` already imports Jaeger:
 
-```go
-import (
-	"fmt"
-	"io"
+```xml
+<dependency>
+    <groupId>com.uber.jaeger</groupId>
+    <artifactId>jaeger-core</artifactId>
+    <version>0.21.0</version>
+</dependency>
+```
 
-	opentracing "github.com/opentracing/opentracing-go"
-	jaeger "github.com/uber/jaeger-client-go"
-	config "github.com/uber/jaeger-client-go/config"
-)
+First let's define a helper function that will create a tracer.
 
-// initJaeger returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
-func initJaeger(service string) (opentracing.Tracer, io.Closer) {
-    cfg := &config.Configuration{
-        Sampler: &config.SamplerConfig{
-            Type:  "const",
-            Param: 1,
-        },
-        Reporter: &config.ReporterConfig{
-            LogSpans: true,
-        },
-    }
-    tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
-    if err != nil {
-        panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
-    }
-    return tracer, closer
+```java
+import com.uber.jaeger.Configuration;
+import com.uber.jaeger.Configuration.ReporterConfiguration;
+import com.uber.jaeger.Configuration.SamplerConfiguration;
+
+public static com.uber.jaeger.Tracer initTracer(String service) {
+    SamplerConfiguration samplerConfig = new SamplerConfiguration("const", 1);
+    ReporterConfiguration reporterConfig = new ReporterConfiguration(true, null, null, null, null);
+    Configuration config = new Configuration(service, samplerConfig, reporterConfig);
+    return (com.uber.jaeger.Tracer) config.getTracer();
 }
 ```
 
 To use this instance, let's change the main function:
 
-```go
-tracer, closer := initJaeger("hello-world")
-defer closer.Close()
+```java
+Tracer tracer = initTracer("hello-world");
+// ... rest of main        
+tracer.close();
 ```
 
 Note that we are passing a string `hello-world` to the init method. It is used to mark all spans emitted by
@@ -118,18 +114,18 @@ the tracer as originating from a `hello-world` service.
 If we run the program now, we should see a span logged:
 
 ```
-$ go run ./lesson01/hello.go Bryan
-2017/09/22 20:26:49 Initializing logging reporter
+$ ./run.sh lesson01.solution.Hello Bryan
+[lesson01.solution.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
 Hello, Bryan!
-2017/09/22 20:26:49 Reporting span 5642914c078ef2f0:5642914c078ef2f0:0:1
+[lesson01.solution.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
 ```
 
 If you have Jaeger backend running, you should be able to see the trace in the UI.
 
 ### Annotate the Trace with Tags and Logs
 
-Right now the trace we created is very basic. If we call our program with `hello.go Susan`
-instead of `hello.go Bryan`, the resulting traces will be nearly identical. It would be nice if we could
+Right now the trace we created is very basic. If we call our program with `Hello Susan`
+instead of `Hello Bryan`, the resulting traces will be nearly identical. It would be nice if we could
 capture the program arguments in the traces to distinguish them.
 
 One naive way is to use the string `"Hello, Bryan!"` as the _operation name_ of the span, instead of `"say-hello"`.
@@ -155,12 +151,12 @@ for recommended tags and log fields.
 
 #### Using Tags
 
-In the case of `hello.go Bryan`, the string "Bryan" is a good candidate for a span tag, since it applies
+In the case of `Hello Bryan`, the string `"Bryan"` is a good candidate for a span tag, since it applies
 to the whole span and not to a particular moment in time. We can record it like this:
 
-```go
-span := tracer.StartSpan("say-hello")
-span.SetTag("hello-to", helloTo)
+```java
+Span span = tracer.buildSpan("say-hello").startManual();
+span.setTag("hello-to", helloTo);
 ```
 
 #### Using Logs
@@ -170,14 +166,11 @@ Right now we're formatting the `helloStr` and then printing it. Both of these op
 time, so we can log their completion:
 
 ```go
-helloStr := fmt.Sprintf("Hello, %s!", helloTo)
-span.LogFields(
-    log.String("event", "string-format"),
-    log.String("value", helloStr),
-)
+String helloStr = String.format("Hello, %s!", helloTo);
+span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
 
 println(helloStr)
-span.LogKV("event", "println")
+span.log(ImmutableMap.of("event", "println"));
 ```
 
 The log statements might look a bit strange if you have not previosuly worked with structured logging API.
@@ -187,17 +180,17 @@ automatically processed by log aggregation systems. The idea comes from the real
 logs are processed by machines rather than humans. Just [google "structured-logging"][google-logging]
 for many articles on this topic.
 
-The OpenTracing API for Go exposes structured logging API in two flavors:
-  * The `LogFields` function takes strongly typed key-value pairs and is designed for zero-allocations
-  * The `LogKV` function takes an alternating list of `key1,value1,key2,value2` pairs (easier to use)
+The OpenTracing API for Java exposes structured logging API by accepting a collection of key-value pairs
+in the form of a `Map<String, ?>`. Here we are using Guava's `ImmutableMap.of()` to construct such a map,
+which takes an alternating list of `key1,value1,key2,value2` pairs.
 
 The OpenTracing Specification also recommends all log statements to contain an `event` field that
 describes the overall event being logged, with other attributes of the event provided as additional fields.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. We moved the `initJaeger`
-helper function into its own package so that we can reuse it in the other lessons as `tracing.Init`.
+The complete program can be found in the [solution](./solution) package. We moved the `initTracer`
+helper function into its own package `lib` so that we can reuse it in the other lessons as `Tracing.init()`.
 
 Next lesson: [Context and Tracing Functions](../lesson02).
 
