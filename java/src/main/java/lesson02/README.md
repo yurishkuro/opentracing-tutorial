@@ -16,68 +16,59 @@ In [Lesson 1](../lesson01) we wrote a program that creates a trace that consists
 That single span combined two operations performed by the program, formatting the output string
 and printing it. Let's move those operations into standalone functions first:
 
-```go
-span := tracer.StartSpan("say-hello")
-span.SetTag("hello-to", helloTo)
-defer span.Finish()
-
-helloStr := formatString(span, helloTo)
-printHello(span, helloStr)
+```java
+String helloStr = formatString(span, helloTo);
+printHello(span, helloStr);
 ```
 
 and the functions:
 
-```go
-func formatString(span opentracing.Span, helloTo string) string {
-    helloStr := fmt.Sprintf("Hello, %s!", helloTo)
-    span.LogFields(
-        log.String("event", "string-format"),
-        log.String("value", helloStr),
-    )
-
-    return helloStr
+```java
+private String formatString(Span span, String helloTo) {
+    String helloStr = String.format("Hello, %s!", helloTo);
+    span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+    return helloStr;
 }
 
-func printHello(span opentracing.Span, helloStr string) {
-    println(helloStr)
-    span.LogKV("event", "println")
+private void printHello(Span span, String helloStr) {
+    System.out.println(helloStr);
+    span.log(ImmutableMap.of("event", "println"));
 }
 ```
 
 Of course, this does not change the outcome. What we really want to do is to wrap each function into its own span.
 
-```go
-func formatString(rootSpan opentracing.Span, helloTo string) string {
-    span := rootSpan.Tracer().StartSpan("formatString")
-    defer span.Finish()
-
-    helloStr := fmt.Sprintf("Hello, %s!", helloTo)
-    span.LogFields(
-        log.String("event", "string-format"),
-        log.String("value", helloStr),
-    )
-
-    return helloStr
+```java
+private  String formatString(Span rootSpan, String helloTo) {
+    Span span = tracer.buildSpan("formatString").startManual();
+    try {
+        String helloStr = String.format("Hello, %s!", helloTo);
+        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+        return helloStr;
+    } finally {
+        span.finish();
+    }
 }
 
-func printHello(rootSpan opentracing.Span, helloStr string) {
-    span := rootSpan.Tracer().StartSpan("printHello")
-    defer span.Finish()
-
-    println(helloStr)
-    span.LogKV("event", "println")
+private void printHello(Span rootSpan, String helloStr) {
+    Span span = tracer.buildSpan("printHello").startManual();
+    try {
+        System.out.println(helloStr);
+        span.log(ImmutableMap.of("event", "println"));
+    } finally {
+        span.finish();
+    }
 }
 ```
 
 Let's run it:
 
-```shell
-$ go run ./lesson02/solution/hello.go Bryan
-2017/09/24 14:56:04 Initializing logging reporter
-2017/09/24 14:56:04 Reporting span 292bd18774533232:292bd18774533232:0:1
+```
+$ ./run.sh lesson02.exercise.hello.go Bryan
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 12c92a6604499c25:12c92a6604499c25:0:1 - formatString
 Hello, Bryan!
-2017/09/24 14:56:04 Reporting span 2004e24c3362725f:2004e24c3362725f:0:1
-2017/09/24 14:56:04 Reporting span 273d83da9cdc6413:273d83da9cdc6413:0:1
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 14aaaf7a377e5147:14aaaf7a377e5147:0:1 - printHello
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: a25cf88369793b9b:a25cf88369793b9b:0:1 - say-hello
 ```
 
 There is a problem here. The first hexadecimal segment of the output represents Jaeger trace ID,
@@ -85,14 +76,10 @@ but they are all different. If we search for those IDs in the UI each will repre
 trace with a single span. That's not what we wanted!
 
 What we really wanted was to establish causal relationship between the two new spans to the root
-span started in `main()`. We can do that by passing an additional option to the `StartSpan`
-function:
+span started in `main()`. We can do that by passing an additional option `asChildOf` to the span builder:
 
-```go
-    span = rootSpan.Tracer().StartSpan(
-        "formatString",
-        opentracing.ChildOf(span.Context()),
-    )
+```java
+Span span = tracer.buildSpan("formatString").asChildOf(rootSpan).startManual();
 ```
 
 If we think of the trace as a directed acyclic graph where nodes are the spans and edges are
@@ -109,75 +96,69 @@ child span, for example if the child represents a best-effort, fire-and-forget c
 If we modify the `printHello` function accordingly and run the app, we'll see that all reported
 spans now belong to the same trace:
 
-```shell
-$ go run ./lesson02/solution/hello.go Bryan
-2017/09/24 15:10:34 Initializing logging reporter
-2017/09/24 15:10:34 Reporting span 479fefe9525eddb:2a66575ec4945eef:479fefe9525eddb:1
+```
+$ ./run.sh lesson02.exercise.hello.go Bryan
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:42d38965612a195a:4ca67017b68d14c:1 - formatString
 Hello, Bryan!
-2017/09/24 15:10:34 Reporting span 479fefe9525eddb:5adb976bfc1f95c1:479fefe9525eddb:1
-2017/09/24 15:10:34 Reporting span 479fefe9525eddb:479fefe9525eddb:0:1
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:19af156b64c22d23:4ca67017b68d14c:1 - printHello
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:4ca67017b68d14c:0:1 - say-hello
 ```
 
 We can also see that instead of `0` in the 3rd position the first two reported spans display
-`479fefe9525eddb`, which is the ID of the root span. The root span is reported last because
+`4ca67017b68d14c`, which is the ID of the root span. The root span is reported last because
 it is the last one to finish.
 
 If we find this trace in the UI, it will show a proper parent-child relationship between the spans.
 
+The complete version of this program can be found in [./solution/HelloManual.java](./solution/HelloManual.java).
+
 ### Propagate the in-process context
 
-You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object
-as the first argument to each function. Go langauges does not support the notion of thread-local variables,
-so in order to link the individual spans together we _do need to pass something_. We just don't want that
-to be the span object, since it pollutes the application with tracing code. The Go stardard library has
-a type specifically designed for propagating request context throughout the application, called
-`context.Context`. In addition to handling things like deadlines and cancellations, the Context
-allows storing arbitrary key-value pairs, so we can use it to store the currently active span.
-The OpenTracing API integrates with `context.Context` and provides convenient helper functions.
+You may have noticed a few unpleasant side effects of our recent changes
+  * we had to pass the Span object as the first argument to each function
+  * we also had to write somewhat verbose try/finally code to finish the spans
 
-First we need to create the context in the `main()` function and store the span in it:
+OpenTracing API for Java provides a better way. Using thread-locals and the notion of an "active span",
+we can avoid passing the span through our code and just access it via `tracer.
 
-```go
-ctx := context.Background()
-ctx = opentracing.ContextWithSpan(ctx, span)
+```java
+private void sayHello(String helloTo) {
+    try (ActiveSpan span = tracer.buildSpan("say-hello").startActive()) {
+        span.setTag("hello-to", helloTo);
+        
+        String helloStr = formatString(helloTo);
+        printHello(helloStr);
+    }
+}
+
+private  String formatString(String helloTo) {
+    try (ActiveSpan span = tracer.buildSpan("formatString").startActive()) {
+        String helloStr = String.format("Hello, %s!", helloTo);
+        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+        return helloStr;
+    }
+}
+
+private void printHello(String helloStr) {
+    try (ActiveSpan span = tracer.buildSpan("printHello").startActive()) {
+        System.out.println(helloStr);
+        span.log(ImmutableMap.of("event", "println"));
+    }
+}
 ```
 
-Then we pass the `ctx` object instead of the `rootSpan`:
+In the above code we're making the following changes:
+  * we use `startActive()` method of the span builder instead of `startManual()`,
+    which makes the span "active" by storing it in a thread-local storage,
+  * `startActive()` returns `ActiveSpan` instead of plain `Span`. `ActiveSpan` is auto-closable,
+    which allows us to use try-with-resource syntax and avoid calling `span.finish()` explicitly,
+  * `startActive()` automatically creates a `ChildOf` reference to the previous active span, so that
+    we don't have to use `asChildOf()` builder method explicitly.
 
-```go
-helloStr := formatString(ctx, helloTo)
-printHello(ctx, helloStr)
-```
-
-And we modify the functions to use `StartSpanFromContext` helper function:
-
-```go
-func formatString(ctx context.Context, helloTo string) string {
-    span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
-    defer span.Finish()
-    ...
-
-func printHello(ctx context.Context, helloStr string) {
-    span, _ := opentracing.StartSpanFromContext(ctx, "printHello")
-    defer span.Finish()
-    ...
-```
-
-Note that we ignore the second value returned by the function, which is another instance of the Context
-with the new span stored in it. If our functions were calling more functions, we could keep that Context
-instance and pass it down, rather than passing the top-level context.
-
-And one last thing. The `StartSpanFromContext` function uses `opentracing.GlobalTracer()` to start the
-new spans, so we need to initialize that global variable to our instance of Jaeger tracer:
-
-```go
-tracer, closer := tracing.Init("hello-world")
-defer closer.Close()
-opentracing.SetGlobalTracer(tracer)
-```
+If we run this program, we will see that all three reported spans have the same trace ID.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. 
+The two complete programs, `HelloManual` and `HelloActive`, can be found in the [solution](./solution) package. 
 
 Next lesson: [Tracing RPC Requests](../lesson03).

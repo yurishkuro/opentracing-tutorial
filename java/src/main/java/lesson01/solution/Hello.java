@@ -7,13 +7,13 @@ import lib.Tracing;
 
 public class Hello {
 
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            throw new IllegalArgumentException("Expecting one argument");
-        }
-        String helloTo = args[0];
-        
-        Tracer tracer = Tracing.init("hello-world");
+    private final Tracer tracer;
+
+    private Hello(Tracer tracer) {
+        this.tracer = tracer;
+    }
+
+    private void sayHello(String helloTo) {
         Span span = tracer.buildSpan("say-hello").startManual();
         span.setTag("hello-to", helloTo);
         
@@ -24,7 +24,15 @@ public class Hello {
         span.log(ImmutableMap.of("event", "println"));
 
         span.finish();
+    }
 
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            throw new IllegalArgumentException("Expecting one argument");
+        }
+        String helloTo = args[0];
+        Tracer tracer = Tracing.init("hello-world");
+        new Hello(tracer).sayHello(helloTo);
         tracer.close();
     }
 }

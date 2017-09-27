@@ -19,15 +19,19 @@ package lesson01.exercise;
 
 public class Hello {
 
+    private void sayHello(String helloTo) {
+        String helloStr = String.format("Hello, %s!", helloTo);
+        System.out.println(helloStr);
+    }
+
     public static void main(String[] args) {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-        String helloStr = String.format("Hello, %s!", helloTo);
-        System.out.println(helloStr);
+        new Hello().sayHello(helloTo);
+        tracer.close();
     }
-
 }
 ```
 
@@ -50,16 +54,33 @@ We can use a global instance returned by `io.opentracing.util.GlobalTracer.get()
 
 ```java
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 
-Tracer tracer = GlobalTracer.get();
-Span span = tracer.buildSpan("say-hello").startManual();
+public class Hello {
 
-String helloStr = String.format("Hello, %s!", helloTo);
-System.out.println(helloStr);
+    private final io.opentracing.Tracer tracer;
 
-span.finish();
+    private Hello(io.opentracing.Tracer tracer) {
+        this.tracer = tracer;
+    }
+
+    private void sayHello(String helloTo) {
+        Span span = tracer.buildSpan("say-hello").startManual();
+
+        String helloStr = String.format("Hello, %s!", helloTo);
+        System.out.println(helloStr);
+
+        span.finish();
+    }
+
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            throw new IllegalArgumentException("Expecting one argument");
+        }
+        String helloTo = args[0];
+        new Hello(GlobalTracer.get()).sayHello(helloTo);
+    }
+}
 ```
 
 We are using the following basic features of the OpenTracing API:
@@ -103,8 +124,10 @@ public static com.uber.jaeger.Tracer initTracer(String service) {
 To use this instance, let's change the main function:
 
 ```java
+import com.uber.jaeger.Tracer;
+
 Tracer tracer = initTracer("hello-world");
-// ... rest of main        
+new Hello(tracer).sayHello(helloTo);
 tracer.close();
 ```
 

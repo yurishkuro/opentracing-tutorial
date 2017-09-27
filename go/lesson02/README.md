@@ -71,7 +71,7 @@ func printHello(rootSpan opentracing.Span, helloStr string) {
 
 Let's run it:
 
-```shell
+```
 $ go run ./lesson02/solution/hello.go Bryan
 2017/09/24 14:56:04 Initializing logging reporter
 2017/09/24 14:56:04 Reporting span 292bd18774533232:292bd18774533232:0:1
@@ -109,7 +109,7 @@ child span, for example if the child represents a best-effort, fire-and-forget c
 If we modify the `printHello` function accordingly and run the app, we'll see that all reported
 spans now belong to the same trace:
 
-```shell
+```
 $ go run ./lesson02/solution/hello.go Bryan
 2017/09/24 15:10:34 Initializing logging reporter
 2017/09/24 15:10:34 Reporting span 479fefe9525eddb:2a66575ec4945eef:479fefe9525eddb:1
