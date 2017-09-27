@@ -9,6 +9,10 @@
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jaeger.version>1.1.4</jaeger.version>
+        <slf4j.version>1.7.5</slf4j.version>
+        <guava.version>23.0</guava.version>
+        <dropwizard.version>1.1.4</dropwizard.version>
     </properties>
     <build>
         <plugins>
@@ -29,16 +33,23 @@
             <artifactId>jaeger-core</artifactId>
             <version>0.21.0</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
+            <version>${slf4j.version}</version>
             <scope>compile</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>23.0</version>
+            <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-core</artifactId>
+            <version>${dropwizard.version}</version>
         </dependency>
     </dependencies>
 </project>
