@@ -15,5 +15,5 @@ docker run -d -p5775:5775/udp -p6831:6831/udp -p6832:6832/udp \
 ## Tutorials by Language
 
   * [Go tutorial](./go/)
-  * Java tutorial - coming soon
+  * [Java tutorial](./java)
   * Python tutorial - coming soon
