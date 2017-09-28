@@ -202,7 +202,7 @@ Then run the `client/hello.go`. You should see the outputs like this:
 
 ```
 # client
-$ ./run.sh lesson03.solution.Hello Bryan
+$ ./run.sh lesson03.exercise.Hello Bryan
 INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello

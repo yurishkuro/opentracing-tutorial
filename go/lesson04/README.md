@@ -93,7 +93,7 @@ to get the same effect.
 Some of the possible applications of baggage include:
 
   * passing the tenancy in multi-tenant systems
-  * passing security tokens
+  * passing identity of the top caller
   * passing fault injection instructions for chaos engineering
   * passing request-scoped dimensions for other monitoring data, like separating metrics for prod vs. test traffic
 
