@@ -233,7 +233,7 @@ traces.
 
 If we open this trace in the UI, we should see all five spans.
 
-![Trace](../../../../../go/trace.png)
+![Trace](../../../../../go/lesson03/trace.png)
 
 ## Conclusion
 
