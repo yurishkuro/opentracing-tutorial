@@ -10,6 +10,8 @@ Learn how to:
 
 ## Walkthrough
 
+First, copy your work from Lesson 1 or the official solution to `lesson02/exercise/Hello.java`.
+
 ### Tracing individual functions
 
 In [Lesson 1](../lesson01) we wrote a program that creates a trace that consists of a single span.
@@ -64,7 +66,7 @@ private void printHello(Span rootSpan, String helloStr) {
 Let's run it:
 
 ```
-$ ./run.sh lesson02.exercise.hello.go Bryan
+$ ./run.sh lesson02.exercise.Hello Bryan
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 12c92a6604499c25:12c92a6604499c25:0:1 - formatString
 Hello, Bryan!
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 14aaaf7a377e5147:14aaaf7a377e5147:0:1 - printHello
@@ -97,7 +99,7 @@ If we modify the `printHello` function accordingly and run the app, we'll see th
 spans now belong to the same trace:
 
 ```
-$ ./run.sh lesson02.exercise.hello.go Bryan
+$ ./run.sh lesson02.exercise.Hello Bryan
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:42d38965612a195a:4ca67017b68d14c:1 - formatString
 Hello, Bryan!
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:19af156b64c22d23:4ca67017b68d14c:1 - printHello
