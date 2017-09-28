@@ -1,0 +1,2 @@
+opentracing>=1.2,<2
+jaeger-client>=3.5,<4
