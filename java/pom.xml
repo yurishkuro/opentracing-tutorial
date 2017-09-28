@@ -13,6 +13,7 @@
         <slf4j.version>1.7.5</slf4j.version>
         <guava.version>23.0</guava.version>
         <dropwizard.version>1.1.4</dropwizard.version>
+        <okhttp.version>3.9.0</okhttp.version>
     </properties>
     <build>
         <plugins>
@@ -33,14 +34,6 @@
             <artifactId>jaeger-core</artifactId>
             <version>0.21.0</version>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -50,6 +43,11 @@
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
             <version>${dropwizard.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -18,17 +18,17 @@ Hello World application, except that the `formatString` and `printHello` functio
 are now rewritten as RPC calls to two downstream services, `formatter` and `publisher`.
 The package is organized as follows:
 
-  * `client/hello.go` is the original `hello.go` from Lesson 2 modified to make HTTP calls
-  * `formatter/formatter.go` is an HTTP server that responds to a request like
+  * `Hello.java` is a copy from Lesson 2 modified to make HTTP calls
+  * `Formatter.java` is a Dropwizard-based HTTP server that responds to a request like
     `GET 'http://localhost:8081/format?helloTo=Bryan'` and returns `"Hello, Bryan!"` string
-  * `publisher/publisher.go` is another HTTP server that responds to requests like
+  * `Publisher.java` is another HTTP server that responds to requests like
      `GET 'http://localhost:8082/publish?helloStr=hi%20there'` and prints `"hi there"` string to stdout.
 
 To test it out, run the formatter and publisher services in separate terminals
 
 ```
-$ go run ./lesson03/exercise/formatter/formatter.go
-$ go run ./lesson03/exercise/publisher/publisher.go
+$ ./run.sh lesson03.exercise.Formatter server
+$ ./run.sh lesson03.exercise.Publisher server
 ```
 
 Execute an HTTP request against the formatter:
@@ -49,34 +49,34 @@ Note that there will be no output from `curl`, but the publisher stdout will sho
 Finally, if we run the client app as we did in the previous lessons:
 
 ```
-$ go run ./lesson03/exercise/client/hello.go Bryan
+$ ./run.sh lesson03.exercise.Hello Bryan
 2017/09/24 21:43:33 Initializing logging reporter
 2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:5d10cdd1a9cf004a:7af6719d92c3df6d:1
 2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:538a7bfd34893922:7af6719d92c3df6d:1
 2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:7af6719d92c3df6d:0:1
 ```
 
-We will see the publisher printing the line `"Hello, Bryan!"`.
+We will see the `publisher` printing the line `"Hello, Bryan!"`.
 
 ### Inter-Process Context Propagation
 
-Since the only change we made in the `hello.go` app was to replace two operations with HTTP calls,
+Since the only change we made in the `Hello.java` app was to replace two operations with HTTP calls,
 the tracing story remains the same - we get a trace with three spans, all from `hello-world` service.
 But now we have two more microservices participating in the transaction and we want to see them
 in the trace as well. In order to continue the trace over the process boundaries and RPC calls,
 we need a way to propagate the span context over the wire. The OpenTracing API provides two functions
-in the Tracer interface to do that, `Inject(spanContext, format, carrier)` and `Extract(format, carrier)`.
+in the Tracer interface to do that, `inject(spanContext, format, carrier)` and `extract(format, carrier)`.
 
 The `format` parameter refers to one of the three standard encodings the OpenTracing API defines:
-  * TextMap where span context is encoded as a collection of string key-value pairs,
-  * Binary where span context is encoded as an opaque byte array,
-  * HTTPHeaders, which is similar to TextMap except that the keys must be safe to be used as HTTP headers.
+  * `TEXT_MAP` where span context is encoded as a collection of string key-value pairs,
+  * `BINARY` where span context is encoded as an opaque byte array,
+  * `HTTP_HEADERS`, which is similar to `TEXT_MAP` except that the keys must be safe to be used as HTTP headers.
 
-The `carrier` is an abstraction over the underlying RPC framework. For example, a carrier for TextMap
-format is an interface that allows the tracer to write key-value pairs via `Set(key, value)` function,
-while a carrier for Binary format is simply an `io.Writer`.
+The `carrier` is an abstraction over the underlying RPC framework. For example, a carrier for `TEXT_MAP`
+format is an interface that allows the tracer to write key-value pairs via `put(key, value)` method,
+while a carrier for Binary format is simply a `ByteBuffer`.
 
-The tracing instrumentation uses `Inject` and `Extract` to pass the span context through the RPC calls.
+The tracing instrumentation uses `inject` and `extract` to pass the span context through the RPC calls.
 
 ### Instrumenting the Client
 
@@ -108,20 +108,29 @@ Our servers are currently not instrumented for tracing. We need to do the follow
 
 #### Add some imports
 
-```go
-import (
-    opentracing "github.com/opentracing/opentracing-go"
-    "github.com/opentracing/opentracing-go/ext"
-    otlog "github.com/opentracing/opentracing-go/log"
-    "github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
-)
+```java
+import io.opentracing.ActiveSpan;
+import io.opentracing.Tracer;
+import lib.Tracing;
 ```
 
-#### Create an instance of a Tracer, similar to how we did it in `hello.go`
+#### Create an instance of a Tracer, similar to how we did it in `Hello.java`
 
-```go
-tracer, closer := tracing.Init("formatter")
-defer closer.Close()
+Add a member variable and a constructor to the publisher:
+
+```java
+private final Tracer tracer;
+
+private Publisher(Tracer tracer) {
+    this.tracer = tracer;
+}
+```
+
+Replace the call to `Publisher.run` with this:
+
+```java
+Tracer tracer = Tracing.init("publisher");
+new Publisher(tracer).run(args);
 ```
 
 #### Extract the span context from the incoming request using `tracer.Extract`
