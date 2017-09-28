@@ -17,8 +17,9 @@ public class Publisher extends Application<Configuration> {
     public class PublisherResource {
 
         @GET
-        public void format(@QueryParam("helloStr") String helloStr) {
+        public String format(@QueryParam("helloStr") String helloStr) {
             System.out.println(helloStr);
+            return "published";
         }
     }
 

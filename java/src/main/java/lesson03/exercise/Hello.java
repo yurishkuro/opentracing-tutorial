@@ -24,7 +24,8 @@ public class Hello {
         try {
             HttpUrl url = new HttpUrl.Builder().scheme("http").host("localhost").port(port).addPathSegment(path)
                     .addQueryParameter(param, value).build();
-            Request request = new Request.Builder().url(url).build();
+            Request.Builder requestBuilder = new Request.Builder().url(url);
+            Request request = requestBuilder.build();
             Response response = client.newCall(request).execute();
             if (response.code() != 200) {
                 throw new RuntimeException("Bad HTTP result: " + response);

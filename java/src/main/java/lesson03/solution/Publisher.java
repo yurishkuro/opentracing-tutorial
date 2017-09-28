@@ -31,10 +31,11 @@ public class Publisher extends Application<Configuration> {
     public class PublisherResource {
 
         @GET
-        public void format(@QueryParam("helloStr") String helloStr, @Context HttpHeaders httpHeaders) {
+        public String format(@QueryParam("helloStr") String helloStr, @Context HttpHeaders httpHeaders) {
             try (ActiveSpan span = Tracing.startServerSpan(tracer, httpHeaders, "publish")) {
                 System.out.println(helloStr);
                 span.log(ImmutableMap.of("event", "println", "value", helloStr));
+                return "published";
             }
         }
     }

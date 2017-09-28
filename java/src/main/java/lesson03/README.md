@@ -81,26 +81,41 @@ The tracing instrumentation uses `inject` and `extract` to pass the span context
 ### Instrumenting the Client
 
 In the `formatString` function we already create a child span. In order to pass its context over the HTTP
-request we need to call `Inject` on the tracer:
+request we need to call `tracer.inject` before building the HTTP request:
 
-```go
-ext.SpanKindRPCClient.Set(span)
-ext.HTTPUrl.Set(span, url)
-ext.HTTPMethod.Set(span, "GET")
-span.Tracer().Inject(
-    span.Context(),
-    opentracing.HTTPHeaders,
-    opentracing.HTTPHeadersCarrier(req.Header),
-)
+```java
+Tags.SPAN_KIND.set(tracer.activeSpan(), Tags.SPAN_KIND_CLIENT);
+Tags.HTTP_METHOD.set(tracer.activeSpan(), "GET");
+Tags.HTTP_URL.set(tracer.activeSpan(), url.toString());
+tracer.inject(tracer.activeSpan().context(), Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
 ```
 
 In this case the `carrier` is HTTP request headers object, which we adapt to the carrier API
-by wrapping in `opentracing.HTTPHeadersCarrier()`. Notice that we also add a couple additional
-tags to the span with some metadata about the HTTP request, and we mark the span with a
-`span.kind=client` tag, as recommended by the OpenTracing
-[Semantic Conventions][semantic-conventions]. There are other tags we could add.
+by wrapping in `RequestBuilderCarrier` helper class. 
 
-We need to add similar code to the `printHello` function.
+```java
+private static class RequestBuilderCarrier implements io.opentracing.propagation.TextMap {
+    private final Request.Builder builder;
+
+    RequestBuilderCarrier(Request.Builder builder) {
+        this.builder = builder;
+    }
+
+    @Override
+    public Iterator<Entry<String, String>> iterator() {
+        throw new UnsupportedOperationException("carrier is write-only");
+    }
+
+    @Override
+    public void put(String key, String value) {
+        builder.addHeader(key, value);
+    }
+}
+```
+
+Notice that we also add a couple additional tags to the span with some metadata about the HTTP request, 
+and we mark the span with a `span.kind=client` tag, as recommended by the OpenTracing
+[Semantic Conventions][semantic-conventions]. There are other tags we could add.
 
 ### Instrumenting the Servers
 
@@ -116,46 +131,68 @@ import lib.Tracing;
 
 #### Create an instance of a Tracer, similar to how we did it in `Hello.java`
 
-Add a member variable and a constructor to the publisher:
+Add a member variable and a constructor to the Formatter:
 
 ```java
 private final Tracer tracer;
 
-private Publisher(Tracer tracer) {
+private Formatter(Tracer tracer) {
     this.tracer = tracer;
 }
 ```
 
-Replace the call to `Publisher.run` with this:
+Replace the call to `Formatter.run()` with this:
 
 ```java
-Tracer tracer = Tracing.init("publisher");
-new Publisher(tracer).run(args);
+Tracer tracer = Tracing.init("formatter");
+new Formatter(tracer).run(args);
 ```
 
-#### Extract the span context from the incoming request using `tracer.Extract`
+#### Extract the span context from the incoming request using `tracer.extract`
 
-```go
-spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
+First, add a helper function:
+
+```java
+public static ActiveSpan startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
+        String operationName) {
+    // format the headers for extraction
+    MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
+    final HashMap<String, String> headers = new HashMap<String, String>();
+    for (String key : rawHeaders.keySet()) {
+        headers.put(key, rawHeaders.get(key).get(0));
+    }
+
+    Tracer.SpanBuilder spanBuilder;
+    try {
+        SpanContext parentSpan = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
+        if (parentSpan == null) {
+            spanBuilder = tracer.buildSpan(operationName);
+        } else {
+            spanBuilder = tracer.buildSpan(operationName).asChildOf(parentSpan);
+        }
+    } catch (IllegalArgumentException e) {
+        spanBuilder = tracer.buildSpan(operationName);
+    }
+    return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive();
+}
 ```
 
-#### Start a new child span representing the work of the server
+The logic here is similar to the client side instrumentation, except that we are using `tracer.extract`
+and tagging the span as `span.kind=server`. Instead of using a dedicated adapter class to convert
+JAXRS `HttpHeaders` type into `io.opentracing.propagation.TextMap`, we are copying the headers to a plain
+`HashMap<String, String>` and using a standard adapter `TextMapExtractAdapter`.
 
-We use a special option `RPCServerOption` that creates a `ChildOf` reference to the passed `spanCtx`
-as well as sets a `span.kind=server` tag on the new span.
+Now change the `FormatterResource` handler method to use `startServerSpan`:
 
-```go
-span := tracer.StartSpan("format", ext.RPCServerOption(spanCtx))
-defer span.Finish()
-```
-
-#### Optionally, add tags / logs to that span
-
-```go
-span.LogFields(
-    otlog.String("event", "string-format"),
-    otlog.String("value", helloStr),
-)
+```java
+@GET
+public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
+    try (ActiveSpan span = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
+        String helloStr = String.format("Hello, %s!", helloTo);
+        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+        return helloStr;
+    }
+}
 ```
 
 ### Take It For s Spin
@@ -165,25 +202,29 @@ Then run the `client/hello.go`. You should see the outputs like this:
 
 ```
 # client
-$ go run ./lesson03/exercise/client/hello.go Bryan
-2017/09/24 16:36:06 Initializing logging reporter
-2017/09/24 16:36:06 Reporting span 731020308bd6d05d:3535cabe610946bb:731020308bd6d05d:1
-2017/09/24 16:36:06 Reporting span 731020308bd6d05d:4ef2c9b5523bca3b:731020308bd6d05d:1
-2017/09/24 16:36:06 Reporting span 731020308bd6d05d:731020308bd6d05d:0:1
+$ ./run.sh lesson03.solution.Hello Bryan
+INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:5fe2d9de96c3887a:0:1 - say-hello
 
 # formatter
-$ go run ./lesson03/exercise/formatter/formatter.go
-2017/09/24 16:35:56 Initializing logging reporter
-2017/09/24 16:36:06 Reporting span 731020308bd6d05d:48394b5372417ee4:3535cabe610946bb:1
+$ ./run.sh lesson03.exercise.Formatter server
+[skip noise]
+INFO org.eclipse.jetty.server.Server: Started @3968ms
+INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:b73ff97ea68a36f8:72910f6018b1bd09:1 - format
+127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 13 "-" "okhttp/3.9.0" 3
 
 # publisher
-$ go run ./lesson03/exercise/publisher/publisher.go
-2017/09/24 16:35:59 Initializing logging reporter
+$ ./run.sh lesson03.exercise.Publisher server
+[skip noise]
+INFO org.eclipse.jetty.server.Server: Started @3388ms
 Hello, Bryan!
-2017/09/24 16:36:06 Reporting span 731020308bd6d05d:37908db2de452ea2:4ef2c9b5523bca3b:1
+INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:4a2c39e462cb2a92:62d73167c129ecd7:1 - publish
+127.0.0.1 - - "GET /publish?helloStr=Hello,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 80
 ```
 
-Note how all recorded spans show the same trace ID `731020308bd6d05d`. This is a sign
+Note how all recorded spans show the same trace ID `5fe2d9de96c3887a`. This is a sign
 of correct instrumentation. It is also a very useful debugging approach when something
 is wrong with tracing. A typical error is to miss the context propagation somwehere,
 either in-process or inter-process, which results in different trace IDs and broken
@@ -191,7 +232,7 @@ traces.
 
 If we open this trace in the UI, we should see all five spans.
 
-![Trace](trace.png)
+![Trace](../go/trace.png)
 
 ## Conclusion
 
@@ -201,12 +242,8 @@ Next lesson: [Baggage](../lesson04).
 
 ## Extra Credit
 
-In the trace screenshot we can see that the client-side spans are a lot larger than the corresponding
-server-side spans. This might indicate some time spent in establishing the HTTP connections. There is
-an open source library https://github.com/opentracing-contrib/go-stdlib that provides OpenTracing
-instrumentation for Go's standard `net/http` components, including detailed tracing of the HTTP connection.
-
-Try replacing the manual OpenTracing instrumentation we added in the lesson around HTTP calls with
-the instrumentation available in this library.
+Adding manual instrumentation to Dropwizard and okhttp like we did is tedious. Fortunately, we don't
+need to do that because that instrumentation itself is open source. For an extra credit, try to use
+modules from http://github.com/opentracing-contrib to avoid instrumenting your code manually.
 
 [semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md

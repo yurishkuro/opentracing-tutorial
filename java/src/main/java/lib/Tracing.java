@@ -8,6 +8,8 @@ import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapExtractAdapter;
+import io.opentracing.tag.Tags;
+
 import java.util.HashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -31,17 +33,18 @@ public final class Tracing {
             headers.put(key, rawHeaders.get(key).get(0));
         }
 
-        ActiveSpan span;
+        Tracer.SpanBuilder spanBuilder;
         try {
-            SpanContext parentSpan = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
-            if (parentSpan == null) {
-                span = tracer.buildSpan(operationName).startActive();
+            SpanContext parentSpanCtx = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
+            if (parentSpanCtx == null) {
+                spanBuilder = tracer.buildSpan(operationName);
             } else {
-                span = tracer.buildSpan(operationName).asChildOf(parentSpan).startActive();
+                spanBuilder = tracer.buildSpan(operationName).asChildOf(parentSpanCtx);
             }
         } catch (IllegalArgumentException e) {
-            span = tracer.buildSpan(operationName).startActive();
+            spanBuilder = tracer.buildSpan(operationName);
         }
-        return span;
+        // TODO could add more tags like http.url
+        return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive();
     }
 }
