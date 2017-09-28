@@ -42,9 +42,10 @@ Execute and HTTP request against the publisher:
 
 ```
 $ curl 'http://localhost:8082/publish?helloStr=hi%20there'
+published
 ```
 
-Note that there will be no output from `curl`, but the publisher stdout will show `"hi there"`.
+The publisher stdout will show `"hi there"`.
 
 Finally, if we run the client app as we did in the previous lessons:
 
@@ -232,7 +233,7 @@ traces.
 
 If we open this trace in the UI, we should see all five spans.
 
-![Trace](../go/trace.png)
+![Trace](../../../../../go/trace.png)
 
 ## Conclusion
 

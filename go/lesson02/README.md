@@ -10,7 +10,7 @@ Learn how to:
 
 ## Walkthrough
 
-First, copy your work from Lesson 1 or the official solution to `lesson02/exercise/hello.go`.
+First, copy your work or the official solution from [Lesson 1](../lesson01) to `lesson02/exercise/hello.go`.
 
 ### Tracing individual functions
 
