@@ -14,7 +14,7 @@ Learn how to:
 
 To save you some typing, we are going to start this lesson with a partial solution
 available in the [exercise](./exercise) package. We are still working with the same
-Hello World application, except that the `formatString` and `printHello` functions
+Hello World application, except that the `format_string` and `print_hello` functions
 are now rewritten as RPC calls to two downstream services, `formatter` and `publisher`.
 The package is organized as follows:
 
@@ -221,7 +221,7 @@ traces.
 
 If we open this trace in the UI, we should see all five spans.
 
-![Trace](../../../../../go/lesson03/trace.png)
+![Trace](../go/lesson03/trace.png)
 
 ## Conclusion
 
