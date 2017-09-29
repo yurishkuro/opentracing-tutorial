@@ -15,14 +15,14 @@ def say_hello(hello_to):
             print_hello(hello_str)
 
 def format_string(hello_to):
-    with tracer.start_span('format', child_of=get_current_span()) as span:
+    with tracer.start_span('formatString', child_of=get_current_span()) as span:
         with span_in_context(span):
             hello_str = http_get(8081, 'format', 'helloTo', hello_to)
             span.log_kv({'event': 'string-format', 'value': hello_str})
             return hello_str
 
 def print_hello(hello_str):
-    with tracer.start_span('println', child_of=get_current_span()) as span:
+    with tracer.start_span('printHello', child_of=get_current_span()) as span:
         with span_in_context(span):
             http_get(8082, 'publish', 'helloStr', hello_str)
             span.log_kv({'event': 'println'})
@@ -40,7 +40,7 @@ def http_get(port, path, param, value):
     r = requests.get(url, params={param: value}, headers=headers)
     assert r.status_code == 200
     return r.text
-        
+
 
 # main
 assert len(sys.argv) == 2

@@ -12,7 +12,7 @@ Learn how to:
 
 ### A simple Hello-World program
 
-Let's create a simple Python program `lesson01/exercise/hello.py` that takes an argument and prints "Hello, {arg}!". 
+Let's create a simple Python program `lesson01/exercise/hello.py` that takes an argument and prints "Hello, {arg}!".
 
 ```
 mkdir lesson01/exercise
@@ -33,7 +33,7 @@ hello_to = sys.argv[1]
 say_hello(hello_to)
 ```
 
-Run it: 
+Run it:
 ```
 $ python -m lesson01.exercise.hello Bryan
 Hello, Bryan!
@@ -75,7 +75,7 @@ def say_hello(hello_to):
 ```
 
 If we run this program, we will see no difference, and no traces in the tracing UI.
-That's because the variable `opentracing.tracer` points to a no-op tracer by default.
+That's because the variable `opentracing.tracer` points to is a no-op tracer by default.
 
 ### Initialize a real tracer
 
@@ -105,7 +105,7 @@ def init_tracer(service):
     return config.initialize_tracer()
 ```
 
-To use this instance, let's change the main function:
+To use this instance, let's replace `opentracing.tracer` with `init_tracer(...)`:
 
 ```python
 tracer = init_tracer('hello-world')
@@ -119,6 +119,10 @@ so it has an internal buffer of spans that is flushed by a background thread. Si
 it may not have time to flush the spans to Jaeger backend. Let's add the following to the end of `hello.py`:
 
 ```
+import time
+
+# ...
+
 # yield to IOLoop to flush the spans
 time.sleep(2)
 tracer.close()
@@ -152,9 +156,9 @@ more general operation names is to allow the tracing systems to do aggregations.
 has an option of emitting metrics for all the traffic going through the application. Having a unique
 operation name for each span would make the metrics useless.
 
-The recommended solution is to annotate spans with tags or logs. A span _tag_ is a key-value pair that provides
-certain metadata about the span. A span _log_ is pretty much the same as a regular log statement, it contains
-a timestamp and some data.
+The recommended solution is to annotate spans with tags or logs. A _tag_ is a key-value pair that provides
+certain metadata about the span. A _log_ is similar to a regular log statement, it contains
+a timestamp and some data, but it is associated with span from which it was logged.
 
 When should we use tags vs. logs?  The tags are meant to describe attributes of the span that apply
 to the whole duration of the span. For example, if a span represents an HTTP request, then the URL of the
@@ -177,7 +181,7 @@ with tracer.start_span('say-hello') as span:
 #### Using Logs
 
 Our hello program is so simple that it's difficult to find a relevant example of a log, but let's try.
-Right now we're formatting the `helloStr` and then printing it. Both of these operations take certain
+Right now we're formatting the `hello_str` and then printing it. Both of these operations take certain
 time, so we can log their completion:
 
 ```python
@@ -188,7 +192,7 @@ print(hello_str)
 span.log_kv({'event': 'println'})
 ```
 
-The log statements might look a bit strange if you have not previosuly worked with structured logging API.
+The log statements might look a bit strange if you have not previosuly worked with a structured logging API.
 Rather than formatting a log message into a single string that is easy for humans to read, structured
 logging APIs encourage you to separate bits and pieces of that message into key-value pairs that can be
 automatically processed by log aggregation systems. The idea comes from the realization that today most
@@ -206,8 +210,8 @@ you will be able to see the tags and logs.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. We moved the `initJaeger`
-helper function into its own package so that we can reuse it in the other lessons as `tracing.Init`.
+The complete program can be found in the [solution](./solution) package. We moved the `init_tracer`
+helper function into its own package so that we can reuse it in the other lessons as `from lib.tracing import init_tracer`.
 
 Next lesson: [Context and Tracing Functions](../lesson02).
 
