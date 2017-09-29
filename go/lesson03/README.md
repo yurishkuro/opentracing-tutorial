@@ -149,7 +149,7 @@ span.LogFields(
 )
 ```
 
-### Take It For s Spin
+### Take It For a Spin
 
 As before, first run the `formatter` and `publisher` apps in separate terminals.
 Then run the `client/hello.go`. You should see the outputs like this:

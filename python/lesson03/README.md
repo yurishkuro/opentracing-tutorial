@@ -174,7 +174,7 @@ def format():
 
 Make a similar change in `publisher.py`.
 
-### Take It For s Spin
+### Take It For a Spin
 
 As before, first run the `formatter` and `publisher` apps in separate terminals.
 Then run the `hello.py`. You should see the outputs like this:
