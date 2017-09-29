@@ -57,7 +57,7 @@ By doing this we read a second command line argument as a "greeting" and store i
 
 Change the following code in the `formatter`'s HTTP handler:
 
-```java
+```python
 with tracer.start_span('format', child_of=span_ctx, tags=span_tags) as span:
     greeting = span.get_baggage_item('greeting')
     if not greeting:

@@ -35,7 +35,7 @@ say_hello(hello_to)
 
 Run it: 
 ```
-$ python ./lesson01/hello.py Bryan
+$ python -m lesson01.exercise.hello Bryan
 Hello, Bryan!
 ```
 
