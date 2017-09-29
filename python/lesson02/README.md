@@ -95,8 +95,7 @@ The label, or `ReferenceType`, describes the nature of the relationship. `ChildO
 means that the `root_span` has a logical dependency on the child `span` before `root_span` can
 complete its operation. Another standard reference type in OpenTracing is `FollowsFrom`, which
 means the `root_span` is the ancestor in the DAG, but it does not depend on the completion of the
-child span, for example if the child represents a best-effort, fire-and-forget cache write or
-down-stream processing in an event-driven architecture.
+child span, for example if the child represents a best-effort, fire-and-forget cache write.
 
 If we modify the `print_hello` function accordingly and run the app, we'll see that all reported
 spans now belong to the same trace:

@@ -236,4 +236,4 @@ need to do that because that instrumentation itself is open source. For an extra
 modules from https://github.com/uber-common/opentracing-python-instrumentation and
 https://github.com/opentracing-contrib/python-flask to avoid instrumenting your code manually.
 
-[semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md#standard-span-tags-and-log-fields
+[semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md

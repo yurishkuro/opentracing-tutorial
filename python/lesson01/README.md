@@ -75,7 +75,7 @@ def say_hello(hello_to):
 ```
 
 If we run this program, we will see no difference, and no traces in the tracing UI.
-That's because the variable `opentracing.tracer` points to is a no-op tracer by default.
+That's because the variable `opentracing.tracer` points to a no-op tracer by default.
 
 ### Initialize a real tracer
 
