@@ -8,7 +8,7 @@
 ### Walkthrough
 
 In Lesson 3 we have seen how span context is propagated over the wire between different applications.
-It is not hard to see that this process can be generalized to propagating more than just the tracing context.
+It is not hard to see that this process can be generalized to passing more than just the tracing context.
 With OpenTracing instrumentation in place, we can support general purpose _distributed context propagation_
 where we associate some metadata with the transaction and make that metadata available anywhere in the
 distributed call graph. In OpenTracing this metadata is called _baggage_, to highlight the fact that
@@ -18,7 +18,8 @@ To see how it works in OpenTracing, let's take the application we built in Lesso
 code from [../lesson03/solution](../lesson03/solution) package:
 
 ```
-cp src/main/java/lesson03/solution/*java src/main/java/lesson04/solution
+mkdir lesson04/exercise
+cp -r lesson03/solution/*py lesson04/exercise/
 ```
 
 The `formatter` service takes the `helloTo` parameter and returns a string `Hello, {helloTo}!`. Let's modify
@@ -26,40 +27,43 @@ it so that we can customize the greeting too, but without modifying the public A
 
 ### Set Baggage in the Client
 
-Let's add/replace the following code to `Hello.java`:
+Let's add/replace the following code to `hello.py`:
 
-```java
-public static void main(String[] args) {
-    if (args.length != 2) {
-        throw new IllegalArgumentException("Expecting two arguments, helloTo and greeting");
-    }
-    String helloTo = args[0];
-    String greeting = args[1];
-    Tracer tracer = Tracing.init("hello-world");
-    new Hello(tracer).sayHello(helloTo, greeting);
-    tracer.close();
-    System.exit(0); // okhttpclient sometimes hangs maven otherwise
-}
+```python
+assert len(sys.argv) == 3
+
+tracer = init_tracer('hello-world')
+
+hello_to = sys.argv[1]
+greeting = sys.argv[2]
+say_hello(hello_to, greeting)
 ```
 
-And add this instruction to `sayHello` method after starting the span:
+And update `sayHello`:
 
-```java
-span.setBaggageItem("greeting", greeting);
+```python
+def say_hello(hello_to, greeting):
+    with tracer.start_span('say-hello') as span:
+        span.set_tag('hello-to', hello_to)
+        span.set_baggage_item('greeting', greeting)
+        with span_in_context(span):
+            hello_str = format_string(hello_to)
+            print_hello(hello_str)
 ```
 
-By doing this we read a second command line argument as a "greeting" and store it in the baggage under `"greeting"` key.
+By doing this we read a second command line argument as a "greeting" and store it in the baggage under `'greeting'` key.
 
 ### Read Baggage in Formatter
 
-Add the following code to the `formatter`'s HTTP handler:
+Change the following code in the `formatter`'s HTTP handler:
 
 ```java
-String greeting = span.getBaggageItem("greeting");
-if (greeting == null) {
-    greeting = "Hello";
-}
-String helloStr = String.format("%s, %s!", greeting, helloTo);
+with tracer.start_span('format', child_of=span_ctx, tags=span_tags) as span:
+    greeting = span.get_baggage_item('greeting')
+    if not greeting:
+        greeting = 'Hello'
+    hello_to = request.args.get('helloTo')
+    return '%s, %s!' % (greeting, hello_to)
 ```
 
 ### Run it
@@ -69,33 +73,43 @@ with two arguments, e.g. `Bryan Bonjour`. The `publisher` should print `Bonjour,
 
 ```
 # client
-$ ./run.sh lesson04.exercise.Hello Bryan Bonjour
-INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:ef06ddba375ff053:e6ee8a816c8386ce:1 - formatString
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:20cdfed1d23892c1:e6ee8a816c8386ce:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:e6ee8a816c8386ce:0:1 - say-hello
+$ python -m lesson04.exercise.hello Bryan Bonjour
+Initializing Jaeger Tracer with UDP reporter
+Using sampler ConstSampler(True)
+opentracing.tracer initialized to <jaeger_client.tracer.Tracer object at 0x10c172f50>[app_name=hello-world]
+Starting new HTTP connection (1): localhost
+http://localhost:8081 "GET /format?helloTo=Bryan HTTP/1.1" 200 15
+Reporting span 1f5b4b5b21ea181d:821961d7d50eac1a:1f5b4b5b21ea181d:1 hello-world.format
+Starting new HTTP connection (1): localhost
+http://localhost:8082 "GET /publish?helloStr=Bonjour%2C+Bryan%21 HTTP/1.1" 200 9
+Reporting span 1f5b4b5b21ea181d:214e6b2fb3400125:1f5b4b5b21ea181d:1 hello-world.println
+Reporting span 1f5b4b5b21ea181d:1f5b4b5b21ea181d:0:1 hello-world.say-hello
 
 # formatter
-$ ./run.sh lesson04.exercise.Formatter server
-[skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3508ms
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:cd2c1d243ddf319b:ef06ddba375ff053:1 - format
-127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 15 "-" "okhttp/3.9.0" 69
+$ python -m lesson04.exercise.formatter
+Initializing Jaeger Tracer with UDP reporter
+Using sampler ConstSampler(True)
+opentracing.tracer initialized to <jaeger_client.tracer.Tracer object at 0x10c7b0e90>[app_name=formatter]
+ * Running on http://127.0.0.1:8081/ (Press CTRL+C to quit)
+Reporting span 1f5b4b5b21ea181d:821961d7d50eac1a:1f5b4b5b21ea181d:1 formatter.format
+127.0.0.1 - - [28/Sep/2017 23:35:04] "GET /format?helloTo=Bryan HTTP/1.1" 200 -
 
 # publisher
-$ ./run.sh lesson03.exercise.Publisher server
-[skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3388ms
+$ python -m lesson04.exercise.publisher
+Initializing Jaeger Tracer with UDP reporter
+Using sampler ConstSampler(True)
+opentracing.tracer initialized to <jaeger_client.tracer.Tracer object at 0x102c40e90>[app_name=publisher]
+ * Running on http://127.0.0.1:8082/ (Press CTRL+C to quit)
 Bonjour, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:f46156fcd7d3abd3:20cdfed1d23892c1:1 - publish
-127.0.0.1 - - "GET /publish?helloStr=Bonjour,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 92
+Reporting span 1f5b4b5b21ea181d:214e6b2fb3400125:1f5b4b5b21ea181d:1 publisher.publish
+127.0.0.1 - - [28/Sep/2017 23:35:04] "GET /publish?helloStr=Bonjour%2C+Bryan%21 HTTP/1.1" 200 -
 ```
 
 ### What's the Big Deal?
 
 We may ask - so what, we could've done the same thing by passing the `greeting` as an HTTP request parameter.
 However, that is exactly the point of this exercise - we did not have to change any APIs on the path from
-the root span in `Hello.java` all the way to the server-side span in `formatter`, three levels down.
+the root span in `hello.py` all the way to the server-side span in `formatter`, three levels down.
 If we had a much larger application with much deeper call tree, say the `formatter` was 10 levels down,
 the exact code changes we made here would have worked, despite 8 more services being in the path.
 If changing the API was the only way to pass the data, we would have needed to modify 8 more services
