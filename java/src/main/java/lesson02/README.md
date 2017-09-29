@@ -73,9 +73,9 @@ INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 14aaaf7a377e5147
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: a25cf88369793b9b:a25cf88369793b9b:0:1 - say-hello
 ```
 
-There is a problem here. The first hexadecimal segment of the output represents Jaeger trace ID,
-but they are all different. If we search for those IDs in the UI each will represent a standalone
-trace with a single span. That's not what we wanted!
+We got three spans, but there is a problem here. The first hexadecimal segment of the output represents
+Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent
+a standalone trace with a single span. That's not what we wanted!
 
 What we really wanted was to establish causal relationship between the two new spans to the root
 span started in `main()`. We can do that by passing an additional option `asChildOf` to the span builder:

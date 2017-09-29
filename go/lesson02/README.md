@@ -82,9 +82,9 @@ Hello, Bryan!
 2017/09/24 14:56:04 Reporting span 273d83da9cdc6413:273d83da9cdc6413:0:1
 ```
 
-There is a problem here. The first hexadecimal segment of the output represents Jaeger trace ID,
-but they are all different. If we search for those IDs in the UI each will represent a standalone
-trace with a single span. That's not what we wanted!
+We got three spans, but there is a problem here. The first hexadecimal segment of the output represents
+Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent
+a standalone trace with a single span. That's not what we wanted!
 
 What we really wanted was to establish causal relationship between the two new spans to the root
 span started in `main()`. We can do that by passing an additional option to the `StartSpan`
@@ -129,7 +129,7 @@ If we find this trace in the UI, it will show a proper parent-child relationship
 ### Propagate the in-process context
 
 You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object
-as the first argument to each function. Go langauges does not support the notion of thread-local variables,
+as the first argument to each function. Go langauge does not support the notion of thread-local variables,
 so in order to link the individual spans together we _do need to pass something_. We just don't want that
 to be the span object, since it pollutes the application with tracing code. The Go stardard library has
 a type specifically designed for propagating request context throughout the application, called
