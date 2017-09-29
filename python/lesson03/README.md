@@ -28,7 +28,7 @@ To test it out, run the formatter and publisher services in separate terminals
 
 ```
 # terminal 2
-$ python lesson03/exercise/formatter.py
+$ python -m lesson03.exercise.formatter
  * Running on http://127.0.0.1:8081/ (Press CTRL+C to quit)
 
 # terminal 3
@@ -123,7 +123,7 @@ def http_get(port, path, param, value):
     return r.text
 ```
 
-Notice that we also add a couple additional tags to the span with some metadata about the HTTP request, 
+Notice that we also add a couple additional tags to the span with some metadata about the HTTP request,
 and we mark the span with a `span.kind=client` tag, as recommended by the OpenTracing
 [Semantic Conventions][semantic-conventions]. There are other tags we could add.
 
@@ -134,7 +134,7 @@ from opentracing.ext import tags
 from opentracing.propagation import Format
 ```
 
-You cam rerun `hello.py` program now, but we won't see any difference.
+You can rerun `hello.py` program now, but we won't see any difference.
 
 ### Instrumenting the Servers
 
@@ -154,13 +154,13 @@ Add a member variable and a constructor to the Formatter:
 
 ```python
 app = Flask(__name__)
-tracer = init_tracer('formatter') 
+tracer = init_tracer('formatter')
 ```
 
 #### Extract the span context from the incoming request using `tracer.extract`
 
 The logic here is similar to the client side instrumentation, except that we are using `tracer.extract`
-and tagging the span as `span.kind=server`. 
+and tagging the span as `span.kind=server`.
 
 ```python
 @app.route("/format")
@@ -225,7 +225,7 @@ If we open this trace in the UI, we should see all five spans.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. 
+The complete program can be found in the [solution](./solution) package.
 
 Next lesson: [Baggage](../lesson04).
 
@@ -236,4 +236,4 @@ need to do that because that instrumentation itself is open source. For an extra
 modules from https://github.com/uber-common/opentracing-python-instrumentation and
 https://github.com/opentracing-contrib/python-flask to avoid instrumenting your code manually.
 
-[semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md
+[semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md#standard-span-tags-and-log-fields
