@@ -180,6 +180,6 @@ opentracing.SetGlobalTracer(tracer)
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. 
+The complete program can be found in the [solution](./solution) package.
 
 Next lesson: [Tracing RPC Requests](../lesson03).

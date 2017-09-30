@@ -133,3 +133,5 @@ so that only blessed services can put blessed keys in the baggage, with possible
 ## Conclusion
 
 The complete program can be found in the [solution](./solution) package.
+
+Extra Credit: [Using existing open source instrumentation](../extracredit).

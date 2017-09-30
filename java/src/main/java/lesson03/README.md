@@ -114,7 +114,7 @@ private static class RequestBuilderCarrier implements io.opentracing.propagation
 }
 ```
 
-Notice that we also add a couple additional tags to the span with some metadata about the HTTP request, 
+Notice that we also add a couple additional tags to the span with some metadata about the HTTP request,
 and we mark the span with a `span.kind=client` tag, as recommended by the OpenTracing
 [Semantic Conventions][semantic-conventions]. There are other tags we could add.
 
@@ -237,14 +237,8 @@ If we open this trace in the UI, we should see all five spans.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. 
+The complete program can be found in the [solution](./solution) package.
 
 Next lesson: [Baggage](../lesson04).
-
-## Extra Credit
-
-Adding manual instrumentation to Dropwizard and okhttp like we did is tedious. Fortunately, we don't
-need to do that because that instrumentation itself is open source. For an extra credit, try to use
-modules from http://github.com/opentracing-contrib to avoid instrumenting your code manually.
 
 [semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md

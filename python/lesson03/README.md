@@ -229,11 +229,4 @@ The complete program can be found in the [solution](./solution) package.
 
 Next lesson: [Baggage](../lesson04).
 
-## Extra Credit
-
-Adding manual instrumentation to `flask` and `requests` like we did is tedious. Fortunately, we don't
-need to do that because that instrumentation itself is open source. For an extra credit, try to use
-modules from https://github.com/uber-common/opentracing-python-instrumentation and
-https://github.com/opentracing-contrib/python-flask to avoid instrumenting your code manually.
-
 [semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md

@@ -161,6 +161,6 @@ If we run this program, we will see that all three reported spans have the same 
 
 ## Conclusion
 
-The two complete programs, `HelloManual` and `HelloActive`, can be found in the [solution](./solution) package. 
+The two complete programs, `HelloManual` and `HelloActive`, can be found in the [solution](./solution) package.
 
 Next lesson: [Tracing RPC Requests](../lesson03).

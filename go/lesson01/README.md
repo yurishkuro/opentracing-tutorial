@@ -12,7 +12,7 @@ Learn how to:
 
 ### A simple Hello-World program
 
-Let's create a simple Go program `lesson01/hello.go` that takes an argument and prints "Hello, {arg}!". 
+Let's create a simple Go program `lesson01/hello.go` that takes an argument and prints "Hello, {arg}!".
 
 ```go
 package main
@@ -32,7 +32,7 @@ func main() {
 }
 ```
 
-Run it: 
+Run it:
 ```
 $ go run ./lesson01/hello.go Bryan
 Hello, Bryan!
@@ -132,9 +132,9 @@ more general operation names is to allow the tracing systems to do aggregations.
 has an option of emitting metrics for all the traffic going through the application. Having a unique
 operation name for each span would make the metrics useless.
 
-The recommended solution is to annotate spans with tags or logs. A span _tag_ is a key-value pair that provides
-certain metadata about the span. A span _log_ is pretty much the same as a regular log statement, it contains
-a timestamp and some data.
+The recommended solution is to annotate spans with tags or logs. A _tag_ is a key-value pair that provides
+certain metadata about the span. A _log_ is similar to a regular log statement, it contains
+a timestamp and some data, but it is associated with span from which it was logged.
 
 When should we use tags vs. logs?  The tags are meant to describe attributes of the span that apply
 to the whole duration of the span. For example, if a span represents an HTTP request, then the URL of the
@@ -171,7 +171,7 @@ println(helloStr)
 span.LogKV("event", "println")
 ```
 
-The log statements might look a bit strange if you have not previosuly worked with structured logging API.
+The log statements might look a bit strange if you have not previosuly worked with a structured logging API.
 Rather than formatting a log message into a single string that is easy for humans to read, structured
 logging APIs encourage you to separate bits and pieces of that message into key-value pairs that can be
 automatically processed by log aggregation systems. The idea comes from the realization that today most

@@ -36,3 +36,5 @@ All subsequent commands in the tutorials should be executed relative to this `py
 * [Lesson 04 - Baggage](./lesson04)
   * Understand distributed context propagation
   * Use baggage to pass data through the call graph
+* [Extra Credit](./extracredit)
+  * Use existing open source instrumentation

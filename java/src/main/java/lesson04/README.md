@@ -111,11 +111,13 @@ Some of the possible applications of baggage include:
 
 ### Now, a Warning... NOW a Warning?
 
-Of course, while baggage is extermely powerful mechanism, it is also dangerous. If we store a 1Mb value/string
+Of course, while baggage is an extermely powerful mechanism, it is also dangerous. If we store a 1Mb value/string
 in baggage, every request in the call graph below that point will have to carry that 1Mb of data. So baggage
 must be used with caution. In fact, Jaeger client libraries implement centrally controlled baggage restrictions,
 so that only blessed services can put blessed keys in the baggage, with possible restrictions on the value length.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. 
+The complete program can be found in the [solution](./solution) package.
+
+Extra Credit: [Using existing open source instrumentation](../extracredit).

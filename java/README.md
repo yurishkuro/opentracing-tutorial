@@ -31,3 +31,5 @@ All subsequent commands in the tutorials should be executed relative to this `ja
 * [Lesson 04 - Baggage](./src/main/java/lesson04)
   * Understand distributed context propagation
   * Use baggage to pass data through the call graph
+* [Extra Credit](./src/main/java/extracredit)
+  * Use existing open source instrumentation

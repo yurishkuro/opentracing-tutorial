@@ -186,18 +186,8 @@ If we open this trace in the UI, we should see all five spans.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. 
+The complete program can be found in the [solution](./solution) package.
 
 Next lesson: [Baggage](../lesson04).
-
-## Extra Credit
-
-In the trace screenshot we can see that the client-side spans are a lot larger than the corresponding
-server-side spans. This might indicate some time spent in establishing the HTTP connections. There is
-an open source library https://github.com/opentracing-contrib/go-stdlib that provides OpenTracing
-instrumentation for Go's standard `net/http` components, including detailed tracing of the HTTP connection.
-
-Try replacing the manual OpenTracing instrumentation we added in the lesson around HTTP calls with
-the instrumentation available in this library.
 
 [semantic-conventions]: https://github.com/opentracing/specification/blob/master/semantic_conventions.md
