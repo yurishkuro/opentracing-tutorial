@@ -1,0 +1,14 @@
+{
+  "name": "nodejs-opentracing-tutorial",
+  "version": "0.0.1",
+  "description": "OpenTracing Tutorial for Node.js",
+  "keywords": [],
+  "author": "Yuri Shkuro <ys@uber.com>",
+  "dependencies": {
+    "jaeger-client": "3.6.0-dev2"
+  },
+  "devDependencies": {
+  },
+  "scripts": {
+  }
+}
