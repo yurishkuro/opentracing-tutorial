@@ -12,16 +12,16 @@ app.get('/', function (req, res) {
 function sayHello(helloTo) {
     var span = tracer.startSpan('say-hello');
     
-    var ret = format_string(helloTo, span)[0];
+    var ret = format_string(helloTo, span);
 
-    var helloStr = ret[0];
+    var helloStr = ret.str;
 
     span.log({
-        'event': 'format-string',
+        'event': 'sayHello',
         'value': helloStr
     });
     
-    print_string(helloStr, ret[1]);
+    print_string(helloStr, ret.p);
     span.log({'event': 'print-string'})
     
     span.finish();
@@ -32,12 +32,22 @@ function sayHello(helloTo) {
 function format_string(helloTo, root_span) {
     var span = tracer.startSpan('format_string', {childOf: root_span.context()});
     var formattedStr = 'Hello, ' + helloTo + '!';
+
+    span.log({
+        'event': 'format-string',
+        'value': helloTo
+    });
+
     span.finish();    
-    return [formattedStr, span];
+    return {str:formattedStr, p:span};
 }
 
 function print_string(helloStr, root_span) {
-    var span = tracer.startSpan('print_string');
+    var span = tracer.startSpan('print_string', {childOf: root_span.context()});
+    span.log({
+        'event': 'print-string',
+        'value': helloStr
+    });
     console.log(helloStr);
     span.finish();
 }
