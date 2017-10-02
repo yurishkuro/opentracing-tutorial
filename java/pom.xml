@@ -14,6 +14,7 @@
         <guava.version>23.0</guava.version>
         <dropwizard.version>1.1.4</dropwizard.version>
         <okhttp.version>3.9.0</okhttp.version>
+        <logback.version>1.2.1</logback.version>
     </properties>
     <build>
         <plugins>
@@ -28,6 +29,15 @@
             </plugin>
         </plugins>
     </build>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>com.uber.jaeger</groupId>
@@ -48,6 +58,10 @@
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <version>${okhttp.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
     </dependencies>
 </project>
