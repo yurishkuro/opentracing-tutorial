@@ -6,7 +6,8 @@
   "author": "Yuri Shkuro <ys@uber.com>",
   "dependencies": {
     "jaeger-client": "3.6.0-dev2",
-    "express": "^4.16"
+    "express": "^4.16",
+    "request" : "latest"
   },
   "devDependencies": {
   },
