@@ -7,7 +7,8 @@
   "dependencies": {
     "jaeger-client": "3.6.0-dev2",
     "express": "^4.16",
-    "request" : "latest"
+    "request-promise" : "latest",
+    "opentracing" : "latest"
   },
   "devDependencies": {
   },
