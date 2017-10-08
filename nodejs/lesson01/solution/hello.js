@@ -1,7 +1,7 @@
 'use strict';
 
-var assert = require('assert');
-var initTracer = require('../../lib/tracing').initTracer;
+const assert = require('assert');
+const initTracer = require('../../lib/tracing').initTracer;
 
 function sayHello(helloTo) {
     var span = tracer.startSpan('say-hello');
@@ -21,9 +21,9 @@ function sayHello(helloTo) {
   
 assert.ok(process.argv.length == 3, 'expecting one argument');
 
-var helloTo = process.argv[2];
+const helloTo = process.argv[2];
 
-var tracer = initTracer('hello-world');
+const tracer = initTracer('hello-world');
 
 sayHello(helloTo);
 

@@ -1,8 +1,8 @@
 'use strict';
 
-var assert = require('assert');
+const assert = require('assert');
 const initTracer = require('../../lib/tracing').initTracer;
-var request = require('request-promise');
+const request = require('request-promise');
 const { Tags, FORMAT_HTTP_HEADERS } = require('opentracing');
 
 function sayHello(helloTo) {
@@ -71,9 +71,9 @@ function http_get(fn, url, span) {
 
 assert.ok(process.argv.length == 3, 'expecting one argument');
 
-var helloTo = process.argv[2];
+const helloTo = process.argv[2];
 
-var tracer = initTracer('hello-world');
+const tracer = initTracer('hello-world');
 
 sayHello(helloTo);
 
