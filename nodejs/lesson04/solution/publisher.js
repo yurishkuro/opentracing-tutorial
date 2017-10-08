@@ -13,19 +13,21 @@ app.listen(port, function () {
     console.log('Publisher app listening on port ' + port);
 })
 
-app.get('/publish/:str', function (req, res) {
+app.get('/publish', function (req, res) {
     const parentSpanContext = tracer.extract(FORMAT_HTTP_HEADERS, req.headers)
     const span = tracer.startSpan('http_server', {
         childOf: parentSpanContext
     });
     span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_SERVER);
 
-    const str= req.params.str;
+    const str= req.query.helloStr;
 
     span.log({
         'event': 'publish',
         'value': str
     });
+
+    console.log(str);
 
     span.finish();
 
