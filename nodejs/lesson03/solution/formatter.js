@@ -13,23 +13,23 @@ app.listen(port, function () {
     console.log('Formatter app listening on port ' + port);
 })
 
-app.get('/format/:str', function (req, res) {
+app.get('/format', function (req, res) {
     const parentSpanContext = tracer.extract(FORMAT_HTTP_HEADERS, req.headers)
     const span = tracer.startSpan('http_server', {
         childOf: parentSpanContext
     });
     span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_SERVER);
 
-    const str= req.params.str;
+    const helloTo= req.query.helloTo;
 
     span.log({
         'event': 'format',
-        'value': str
+        'value': helloTo
     });
 
     span.finish();
 
-    res.send('Hello, ' +  str);
+    res.send(`Hello, ${helloTo}!`);
 })
 
 
