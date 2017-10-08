@@ -1,59 +1,35 @@
 'use strict';
 
-const express = require('express')
-const app = express()
+const assert = require('assert');
 const initTracer = require('../../lib/tracing').initTracer;
-var request = require('request-promise');
-
+const request = require('request-promise');
 const { Tags, FORMAT_HTTP_HEADERS } = require('opentracing');
 
-const tracer = initTracer('hello-world');
+function sayHello(helloTo, greeting) {
 
-const port = 8080;
-
-app.listen(port, function () {
-    console.log('Hello app listening on port ' + port);
-})
-
-// main endpoint
-app.get('/:str/:greeting', main);
-
-function main(req, res) {
-    const input = req.params.str;
-
-    const greeting = req.params.greeting;
-
-    const span = tracer.startSpan('say-hello-request');
+    const span = tracer.startSpan('say-hello');
+    span.setTag('hello-to', helloTo);
 
     span.setBaggageItem('greeting', greeting)
 
-    span.log({
-        'event': 'sayHelloRequest',
-        'value': input
-    });
-
-    format_string(input, span)
+    format_string(helloTo, span)
         .then( data => {
-            console.log(data);
             return print_hello(data, span);
         })
         .then( data => {
             span.setTag(Tags.HTTP_STATUS_CODE, 200)
-            span.finish()
-            res.send('Got response back from service: ' + data);
+            span.finish();
         })
         .catch( err => {
-            console.error(err.message);
             span.setTag(Tags.ERROR, true)
             span.setTag(Tags.HTTP_STATUS_CODE, err.statusCode || 500);
             span.finish();
-            res.send('Sorry, an error happened during call downstream service!');
         });
 
 }
 
 function format_string(input, root_span) {
-    const url = 'http://localhost:8081/format/' + input;
+    const url = `http://localhost:8081/format?helloTo=${input}`;
     const fn = 'format';
 
     const span = tracer.startSpan(fn, {childOf: root_span.context()});
@@ -66,7 +42,7 @@ function format_string(input, root_span) {
 }  
 
 function print_hello(input, root_span) {
-    const url = 'http://localhost:8082/publish/' + input;
+    const url = `http://localhost:8082/publish?helloStr=${input}`;
     const fn = 'publish';
 
     const span = tracer.startSpan(fn, {childOf: root_span.context()});
@@ -95,5 +71,12 @@ function http_get(fn, url, span) {
 
 }
 
-  
+assert.ok(process.argv.length == 4, 'expecting two argument');
 
+const [, , helloTo, greeting] = process.argv;
+
+const tracer = initTracer('hello-world');
+
+sayHello(helloTo, greeting);
+
+tracer.close();
