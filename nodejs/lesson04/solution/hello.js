@@ -79,4 +79,4 @@ const tracer = initTracer('hello-world');
 
 sayHello(helloTo, greeting);
 
-tracer.close();
+setTimeout( e => {tracer.close();}, 12000);
