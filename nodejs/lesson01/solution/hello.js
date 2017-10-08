@@ -27,6 +27,18 @@ const tracer = initTracer('hello-world');
 
 sayHello(helloTo);
 
-//flush out the span and close any reporters and senders
-tracer.close();
+//wait for udp message sent out
+setTimeout( e => {tracer.close();}, 12000);
+
+/* another way to make sure udp message is sent out is by listening to the message event
+const server = require('dgram').createSocket('udp4');
+
+server.on('message', (msg, rinfo) => {
+  tracer.close();
+  server.close();
+});
+
+server.bind(6832);
+*/
+
 
