@@ -67,6 +67,9 @@ function http_get(fn, url, span) {
             .then( data => {
                 span.finish();
                 return data;
+            }, e => {
+                span.finish();
+                throw e;
             });
 
 }
