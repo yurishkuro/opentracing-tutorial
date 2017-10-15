@@ -12,9 +12,7 @@ Learn how to:
 
 ### Hello-World Microservice App
 
-
-
-To test it out, run the formatter and publisher services in separate terminals
+To test it out, first run the formatter and publisher services in separate terminals
 
 ```
 # terminal 1
@@ -26,33 +24,28 @@ $ node lesson03/solution/publisher.js
  * Running on http://localhost:8082/ (Press CTRL+C to quit)
 ```
 
-
 Finally, if we run the client app as we did in the previous lessons:
 
 ```
-$ node lesson03/solution/hello.js
+$ node lesson03/solution/hello.js Peter
 INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
 Hello app listening on port 8080
-
+INFO  Reporting span 80c31f112061d86e:1def63dfd6d6755d:80c31f112061d86e:1
+INFO  Reporting span 80c31f112061d86e:e47ca83f948cb0c4:80c31f112061d86e:1
+INFO  Reporting span 80c31f112061d86e:80c31f112061d86e:0:1
 ```
 
-Run the following curl command a few times:
-
+On formatter terminal screen: 
 ```
-curl localhost:8080/peter
-```
-
-You should see something below on the console for the client app:
-
-```
-INFO  Reporting span 18fbea3958bcf3c9:fb3c19ff97981c3:18fbea3958bcf3c9:1
-INFO  Reporting span 18fbea3958bcf3c9:d7d455d64d6c22ff:18fbea3958bcf3c9:1
-INFO  Reporting span 18fbea3958bcf3c9:18fbea3958bcf3c9:0:1
-INFO  Reporting span 984b77dfbe0df281:f5e02d55e8c5005c:984b77dfbe0df281:1
-INFO  Reporting span 984b77dfbe0df281:cd7468450b4560a9:984b77dfbe0df281:1
-INFO  Reporting span 984b77dfbe0df281:984b77dfbe0df281:0:1
-INFO  Reporting span 44c88c2d1b036968:5cdd4334d1d459e7:44c88c2d1b036968:1
-INFO  Reporting span 44c88c2d1b036968:316264993822da2f:44c88c2d1b036968:1
-INFO  Reporting span 44c88c2d1b036968:44c88c2d1b036968:0:1
+INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
+Formatter app listening on port 8081
+INFO  Reporting span 80c31f112061d86e:9ad7c16acf5f0994:1def63dfd6d6755d:1
 ```
 
+On publisher terminal screen:
+```
+INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
+Publisher app listening on port 8082
+Hello, Peter!
+INFO  Reporting span 80c31f112061d86e:f3211e5bb77c5f2b:e47ca83f948cb0c4:1
+```

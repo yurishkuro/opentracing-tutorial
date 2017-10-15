@@ -27,28 +27,30 @@ $ node lesson03/solution/publisher.js
 Finally, if we run the client app as we did in the previous lessons:
 
 ```
-$ node lesson03/solution/hello.js
+$ node lesson03/solution/hello.js Peter Hello
 INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
 Hello app listening on port 8080
+INFO  Reporting span b9b1b4d5b39165f0:c2af04baeb8fba28:b9b1b4d5b39165f0:1
+INFO  Reporting span b9b1b4d5b39165f0:38631f53c6829d3a:b9b1b4d5b39165f0:1
+INFO  Reporting span b9b1b4d5b39165f0:b9b1b4d5b39165f0:0:1
 
 ```
 
-Run the following curl command a few times:
+On the formatter terminal screen:
+```
+INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
+Formatter app listening on port 8081
+INFO  Reporting span b9b1b4d5b39165f0:2f647091ec9d7011:c2af04baeb8fba28:1
+```
 
+On the publisher terminal screen:
 ```
-curl localhost:8080/peter
+INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
+Publisher app listening on port 8082
+Hello, Peter
+INFO  Reporting span b9b1b4d5b39165f0:a07ba68f7d798215:38631f53c6829d3a:1
 ```
 
-You should see something below on the console for the client app:
+### hello-context.js 
+As you can see in all of the lessons so far, introducing Opentracing functionality in the application code does make the code cluttered a bit, especially requires us to pass the span object around if we need to establish parent-child relationship between spans. In this example, we use one of the latest Node.js experimental feature called 'Async Hook' (https://nodejs.org/api/async_hooks.html), which allows us to register callbacks for the asynchronous resources, such as in our case the Promise object. We use a Node.js module called "continuation-local-storage" to establish the context for the request Promise chain. 
 
-```
-INFO  Reporting span 18fbea3958bcf3c9:fb3c19ff97981c3:18fbea3958bcf3c9:1
-INFO  Reporting span 18fbea3958bcf3c9:d7d455d64d6c22ff:18fbea3958bcf3c9:1
-INFO  Reporting span 18fbea3958bcf3c9:18fbea3958bcf3c9:0:1
-INFO  Reporting span 984b77dfbe0df281:f5e02d55e8c5005c:984b77dfbe0df281:1
-INFO  Reporting span 984b77dfbe0df281:cd7468450b4560a9:984b77dfbe0df281:1
-INFO  Reporting span 984b77dfbe0df281:984b77dfbe0df281:0:1
-INFO  Reporting span 44c88c2d1b036968:5cdd4334d1d459e7:44c88c2d1b036968:1
-INFO  Reporting span 44c88c2d1b036968:316264993822da2f:44c88c2d1b036968:1
-INFO  Reporting span 44c88c2d1b036968:44c88c2d1b036968:0:1
-```
