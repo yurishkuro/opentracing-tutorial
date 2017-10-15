@@ -36,7 +36,7 @@ function sayHello(helloTo, greeting) {
 }
 
 function format_string(input) {
-	const parent_span = ns.get('current_span');
+    const parent_span = ns.get('current_span');
 
     const url = `http://localhost:8081/format?helloTo=${input}`;
     const fn = 'format';
@@ -51,7 +51,7 @@ function format_string(input) {
 }  
 
 function print_hello(input) {
-	const parent_span = ns.get('current_span');
+    const parent_span = ns.get('current_span');
 
     const url = `http://localhost:8082/publish?helloStr=${input}`;
     const fn = 'publish';
