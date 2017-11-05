@@ -1,3 +1,10 @@
+---
+**NOTE**
+
+This README is currently incomplete / unfinished. Please refer to respective README in tutorials for one of the other languages
+
+---
+
 # Lesson 1 - Hello World
 
 ## Objectives
@@ -12,7 +19,6 @@ Learn how to:
 
 ### A simple Hello-World program
 
-```
 
 Run it:
 ```
