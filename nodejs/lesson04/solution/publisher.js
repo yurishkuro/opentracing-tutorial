@@ -16,9 +16,9 @@ app.listen(port, function () {
 app.get('/publish', function (req, res) {
     const parentSpanContext = tracer.extract(FORMAT_HTTP_HEADERS, req.headers)
     const span = tracer.startSpan('http_server', {
-        childOf: parentSpanContext
+        childOf: parentSpanContext,
+        tags: {[Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER}
     });
-    span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_SERVER);
 
     const str= req.query.helloStr;
 
