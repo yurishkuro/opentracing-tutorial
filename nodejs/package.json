@@ -1,15 +1,20 @@
 {
   "name": "nodejs-opentracing-tutorial",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=6.4.0"
+  },
   "description": "OpenTracing Tutorial for Node.js",
   "keywords": [],
   "author": "Yuri Shkuro <ys@uber.com>",
   "dependencies": {
+    "cls-bluebird": "^2.0.1",
+    "continuation-local-storage": "^3.2.0",
+    "express": "^4.16",
     "jaeger-client": "3.6.0-dev2",
-    "express": "^4.16"
+    "opentracing": "latest",
+    "request-promise": "latest"
   },
-  "devDependencies": {
-  },
-  "scripts": {
-  }
+  "devDependencies": {},
+  "scripts": {}
 }

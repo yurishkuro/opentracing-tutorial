@@ -25,5 +25,18 @@ function initTracer(serviceName) {
             }
         }
       };
-      return initJaegerTracer(config, options);
+
+    const tracer = initJaegerTracer(config, options);
+
+    //hook up nodejs process exit event
+    process.on('exit', () => { 
+        console.log('flush out remaining span'); 
+        tracer.close(); 
+    });
+    //handle ctrl+c
+    process.on('SIGINT', () => { 
+        process.exit(); 
+    });
+
+    return tracer;
 }
