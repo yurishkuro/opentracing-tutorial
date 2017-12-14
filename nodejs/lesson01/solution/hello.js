@@ -1,33 +1,46 @@
-'use strict';
+const assert = require("assert");
+const initJaegerTracer = require("jaeger-client").initTracer;
 
-const assert = require('assert');
-const initTracer = require('../../lib/tracing').initTracer;
+const initTracer = serviceName => {
+  const config = {
+    serviceName: serviceName,
+    sampler: {
+      type: "const",
+      param: 1,
+    },
+    reporter: {
+      logSpans: true,
+    },
+  };
+  const options = {
+    logger: {
+      info: function logInfo(msg) {
+        console.log("INFO ", msg);
+      },
+      error: function logError(msg) {
+        console.log("ERROR", msg);
+      },
+    },
+  };
+  return initJaegerTracer(config, options);
+};
 
-function sayHello(helloTo) {
-    var span = tracer.startSpan('say-hello');
-    span.setTag('hello-to', helloTo);
+const tracer = initTracer("hello-world");
 
-    var helloStr = `Hello, ${helloTo}!`;
-    span.log({
-        'event': 'string-format',
-        'value': helloStr
-    });
-    
-    console.log(helloStr);
+const sayHello = helloTo => {
+  const span = tracer.startSpan("say-hello");
+  span.setTag("hello-to", helloTo);
+  const helloStr = `Hello, ${helloTo}!`;
+  span.log({
+    event: "string-format",
+    value: helloStr,
+  });
+  console.log(helloStr);
+  span.log({ event: "print-string" });
+  span.finish();
+};
 
-    span.log({'event': 'print-string'})
-    span.finish();
-}  
-  
-assert.ok(process.argv.length == 3, 'expecting one argument');
-
+assert.ok(process.argv.length == 3, "Expecting one argument");
 const helloTo = process.argv[2];
 
-const tracer = initTracer('hello-world');
-
 sayHello(helloTo);
-
-//wait for udp message sent out
-setTimeout( e => {tracer.close();}, 12000);
-
-
