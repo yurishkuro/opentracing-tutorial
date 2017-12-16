@@ -221,8 +221,5 @@ you will be able to see the tags and logs.
 
 The complete program can be found in the [solution](./solution) directory.
 
-<!---
-TODO:
-We moved the `init_tracer`
-helper function into its own package so that we can reuse it in the other lessons as `from lib.tracing import init_tracer`.
---->
+We moved the `initTracer`
+helper function into its own module so that we can reuse it in the other lessons with a require statement `require("../../lib/tracing")`.
