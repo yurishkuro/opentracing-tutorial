@@ -13,10 +13,10 @@ module.exports.initTracer = serviceName => {
   };
   const options = {
     logger: {
-      info: function logInfo(msg) {
+      info(msg) {
         console.log("INFO ", msg);
       },
-      error: function logError(msg) {
+      error(msg) {
         console.log("ERROR", msg);
       },
     },

@@ -82,6 +82,22 @@ const sayHello = helloTo => {
   console.log(helloStr);
 };
 ```
+We could write a context manager in js using promises.
+
+
+```
+function using(resource, fn) {
+  // wraps it in case the resource was not promise
+  var pResource = Promise.resolve(resource);
+  return pResource.then(fn).finally(function() {
+    return pResource.then(function(resource) {
+      return resource.dispose();
+    });
+  });
+}
+//this needs a rewrite to our purposes.
+```
+
 --->
 
 If we run this program, we will see no difference, and no traces in the tracing UI.
@@ -89,13 +105,13 @@ That's because the variable `new opentracing.Tracer()` points to a no-op tracer 
 
 ### Initialize a real tracer
 
-Let's create an instance of a real tracer, such as [Jaeger](https://github.com/jaegertracing/jaeger-client-node).
+Let's create an instance of a real tracer, such as Jaeger (https://github.com/jaegertracing/jaeger-client-node).
 
 ```javascript
 const initJaegerTracer = require("jaeger-client").initTracer;
 
 function initTracer(serviceName) {
-  var config = {
+  const config = {
     serviceName: serviceName,
     sampler: {
       type: "const",
@@ -105,12 +121,12 @@ function initTracer(serviceName) {
       logSpans: true,
     },
   };
-  var options = {
+  const options = {
     logger: {
-      info: function logInfo(msg) {
+      info(msg) {
         console.log("INFO ", msg);
       },
-      error: function logError(msg) {
+      error(msg) {
         console.log("ERROR", msg);
       },
     },
@@ -171,7 +187,7 @@ to the whole duration of the span. For example, if a span represents an HTTP req
 request should be recorded as a tag because it does not make sense to think of the URL as something
 that's only relevant at different points in time on the span. On the other hand, if the server responded
 with a redirect URL, logging it would make more sense since there is a clear timestamp associated with such
-event. The OpenTracing Specification provides guidelines called [Semantic Conventions][semantic-conventions]
+event. The OpenTracing Specification provides guidelines called [Semantic Conventions](https://github.com/opentracing/specification/blob/master/semantic_conventions.md)
 for recommended tags and log fields.
 
 #### Using Tags
@@ -205,10 +221,9 @@ The log statements might look a bit strange if you have not previously worked wi
 Rather than formatting a log message into a single string that is easy for humans to read, structured
 logging APIs encourage you to separate bits and pieces of that message into key-value pairs that can be
 automatically processed by log aggregation systems. The idea comes from the realization that today most
-logs are processed by machines rather than humans. Just [google "structured-logging"][google-logging]
-for many articles on this topic.
+logs are processed by machines rather than humans. Just [google "structured-logging"](https://www.google.com/search?q=structured-logging)for many articles on this topic.
 
-The OpenTracing API for JavaScript a exposes a structured logging API method `log` that takes a dictionary, or hash,
+The OpenTracing API for JavaScript exposes a structured logging API method `log` that takes a dictionary, or hash,
 of key-value pairs.
 
 The OpenTracing Specification also recommends all log statements to contain an `event` field that
@@ -223,3 +238,6 @@ The complete program can be found in the [solution](./solution) directory.
 
 We moved the `initTracer`
 helper function into its own module so that we can reuse it in the other lessons with a require statement `require("../../lib/tracing")`.
+
+Next lesson: [Context and Tracing Functions](../lesson02).
+
