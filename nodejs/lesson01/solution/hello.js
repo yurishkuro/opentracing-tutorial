@@ -20,3 +20,9 @@ assert.ok(process.argv.length == 3, "Expecting one argument");
 const helloTo = process.argv[2];
 
 sayHello(helloTo);
+
+function closeTracer() {
+  tracer.close();
+}
+
+setTimeout(closeTracer, 12000);

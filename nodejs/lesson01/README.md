@@ -150,6 +150,7 @@ so it has an internal buffer of spans that is flushed by a background thread. Si
 it may not have time to flush the spans to Jaeger backend.
 
 ## Not yet implemented, as spans are showing in Jaeger UI.
+True, however calling tracer.close() in Python instructions shuts down python process in terminal.  This wasn't happening with our node code, so added tracer.close() with a setTimeout to Lesson01 solution. However, unlike with Python needed a long enforced wait (12 seconds) to ensure the spans were sent to Jaeger backend and showed in UI. 
 --->
 
 If we run the program now, we should see a span logged:
@@ -240,4 +241,3 @@ We moved the `initTracer`
 helper function into its own module so that we can reuse it in the other lessons with a require statement `require("../../lib/tracing")`.
 
 Next lesson: [Context and Tracing Functions](../lesson02).
-
