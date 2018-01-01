@@ -1,5 +1,5 @@
 const assert = require("assert");
-const initTracer = require("../../lib/tracing").initTracer;
+const { initTracer } = require("../../lib/tracing");
 
 const tracer = initTracer("hello-world");
 
