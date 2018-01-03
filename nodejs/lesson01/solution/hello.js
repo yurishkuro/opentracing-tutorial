@@ -21,8 +21,6 @@ const helloTo = process.argv[2];
 
 sayHello(helloTo);
 
-function closeTracer() {
-  tracer.close();
-}
+const closeTracer = () => tracer.close();
 
 setTimeout(closeTracer, 12000);
