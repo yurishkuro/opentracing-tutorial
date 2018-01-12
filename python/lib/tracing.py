@@ -13,6 +13,7 @@ def init_tracer(service):
                 'param': 1,
             },
             'logging': True,
+            'reporter_batch_size': 1,
         },
         service_name=service,
     )

@@ -5,7 +5,7 @@
 The tutorials are using CNCF Jaeger (https://github.com/jaegertracing/jaeger) as the tracing backend, 
 [see here](../README.md) how to install it in a Docker image.
 
-This repository uses [glide](https://github.com/Masterminds/glide) to manage dependencies (installed automatically below).
+This repository uses Go's new [`dep`](https://github.com/golang/dep) tool to manage dependencies (installed automatically below).
 
 When you clone the tutorials repository, it should be located in the right place under `$GOPATH`:
 
