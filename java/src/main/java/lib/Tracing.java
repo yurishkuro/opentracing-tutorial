@@ -3,7 +3,7 @@ package lib;
 import com.uber.jaeger.Configuration;
 import com.uber.jaeger.Configuration.ReporterConfiguration;
 import com.uber.jaeger.Configuration.SamplerConfiguration;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
@@ -24,7 +24,7 @@ public final class Tracing {
         return (com.uber.jaeger.Tracer) config.getTracer();
     }
 
-    public static ActiveSpan startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
+    public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
             String operationName) {
         // format the headers for extraction
         MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
@@ -45,6 +45,6 @@ public final class Tracing {
             spanBuilder = tracer.buildSpan(operationName);
         }
         // TODO could add more tags like http.url
-        return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive();
+        return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(true);
     }
 }

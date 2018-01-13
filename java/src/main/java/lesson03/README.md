@@ -125,7 +125,7 @@ Our servers are currently not instrumented for tracing. We need to do the follow
 #### Add some imports
 
 ```java
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import lib.Tracing;
 ```
@@ -154,7 +154,7 @@ new Formatter(tracer).run(args);
 First, add a helper function:
 
 ```java
-public static ActiveSpan startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
+public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
         String operationName) {
     // format the headers for extraction
     MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
@@ -174,7 +174,7 @@ public static ActiveSpan startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHea
     } catch (IllegalArgumentException e) {
         spanBuilder = tracer.buildSpan(operationName);
     }
-    return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive();
+    return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(true);
 }
 ```
 
@@ -188,9 +188,9 @@ Now change the `FormatterResource` handler method to use `startServerSpan`:
 ```java
 @GET
 public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
-    try (ActiveSpan span = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
+    try (Scope scope = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
         String helloStr = String.format("Hello, %s!", helloTo);
-        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+        scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
     }
 }

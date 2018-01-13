@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
 import io.dropwizard.setup.Environment;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.Tracer;
 
 import javax.ws.rs.GET;
@@ -32,9 +32,9 @@ public class Formatter extends Application<Configuration> {
 
         @GET
         public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
-            try (ActiveSpan span = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
+            try (Scope scope = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
                 String helloStr = String.format("Hello, %s!", helloTo);
-                span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+                scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
                 return helloStr;
             }
         }

@@ -102,7 +102,7 @@ Our `pom.xml` already imports Jaeger:
 <dependency>
     <groupId>com.uber.jaeger</groupId>
     <artifactId>jaeger-core</artifactId>
-    <version>0.21.0</version>
+    <version>0.23.0</version>
 </dependency>
 ```
 
@@ -188,11 +188,11 @@ Our hello program is so simple that it's difficult to find a relevant example of
 Right now we're formatting the `helloStr` and then printing it. Both of these operations take certain
 time, so we can log their completion:
 
-```go
+```java
 String helloStr = String.format("Hello, %s!", helloTo);
 span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
 
-println(helloStr)
+System.out.println(helloStr)
 span.log(ImmutableMap.of("event", "println"));
 ```
 

@@ -1,6 +1,6 @@
 package lesson03.solution;
 
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.propagation.Format.Builtin;
 import io.opentracing.tag.Tags;
 
@@ -67,8 +67,8 @@ public class Hello {
     }
 
     private void sayHello(String helloTo) {
-        try (ActiveSpan span = tracer.buildSpan("say-hello").startActive()) {
-            span.setTag("hello-to", helloTo);
+        try (Scope scope = tracer.buildSpan("say-hello").startActive(true)) {
+            scope.span().setTag("hello-to", helloTo);
 
             String helloStr = formatString(helloTo);
             printHello(helloStr);
@@ -76,17 +76,17 @@ public class Hello {
     }
 
     private String formatString(String helloTo) {
-        try (ActiveSpan span = tracer.buildSpan("formatString").startActive()) {
+        try (Scope scope = tracer.buildSpan("formatString").startActive(true)) {
             String helloStr = getHttp(8081, "format", "helloTo", helloTo);
-            span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+            scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
             return helloStr;
         }
     }
 
     private void printHello(String helloStr) {
-        try (ActiveSpan span = tracer.buildSpan("printHello").startActive()) {
+        try (Scope scope = tracer.buildSpan("printHello").startActive(true)) {
             getHttp(8082, "publish", "helloStr", helloStr);
-            span.log(ImmutableMap.of("event", "println"));
+            scope.span().log(ImmutableMap.of("event", "println"));
         }
     }
 

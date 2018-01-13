@@ -125,8 +125,8 @@ we can avoid passing the span through our code and just access it via `tracer.
 
 ```java
 private void sayHello(String helloTo) {
-    try (ActiveSpan span = tracer.buildSpan("say-hello").startActive()) {
-        span.setTag("hello-to", helloTo);
+    try (Scope scope = tracer.buildSpan("say-hello").startActive(true)) {
+        scope.span().setTag("hello-to", helloTo);
         
         String helloStr = formatString(helloTo);
         printHello(helloStr);
@@ -134,27 +134,31 @@ private void sayHello(String helloTo) {
 }
 
 private  String formatString(String helloTo) {
-    try (ActiveSpan span = tracer.buildSpan("formatString").startActive()) {
+    try (Scope scope = tracer.buildSpan("formatString").startActive()) {
         String helloStr = String.format("Hello, %s!", helloTo);
-        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
+        scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
     }
 }
 
 private void printHello(String helloStr) {
-    try (ActiveSpan span = tracer.buildSpan("printHello").startActive()) {
+    try (Scope scope = tracer.buildSpan("printHello").startActive()) {
         System.out.println(helloStr);
-        span.log(ImmutableMap.of("event", "println"));
+        scope.span().log(ImmutableMap.of("event", "println"));
     }
 }
 ```
 
 In the above code we're making the following changes:
-  * we use `startActive()` method of the span builder instead of `startManual()`,
-    which makes the span "active" by storing it in a thread-local storage,
-  * `startActive()` returns `ActiveSpan` instead of plain `Span`. `ActiveSpan` is auto-closable,
-    which allows us to use try-with-resource syntax and avoid calling `span.finish()` explicitly,
-  * `startActive()` automatically creates a `ChildOf` reference to the previous active span, so that
+  * We use `startActive()` method of the span builder instead of `startManual()`,
+    which makes the span "active" by storing it in a thread-local storage.
+  * `startActive()` returns a `Scope` object instead of a `Span`. Scope is a container of the currently
+    active span. We access the active span via `scope.span()`. Once the scope is closed, the previous
+    scope becomes current, thus re-activating previously active span in the current thread.
+  * `Scope` is auto-closable, which allows us to use try-with-resource syntax.
+  * The boolean parameter in `startActive(true)` tells the Scope that once it is closed it should
+    finish the span it represents.
+  * `startActive()` automatically creates a `ChildOf` reference to the previously active span, so that
     we don't have to use `asChildOf()` builder method explicitly.
 
 If we run this program, we will see that all three reported spans have the same trace ID.
