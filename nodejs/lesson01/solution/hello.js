@@ -21,14 +21,4 @@ const helloTo = process.argv[2];
 
 sayHello(helloTo);
 
-//tracer.close(callback gets called after all work is complete.  Likely need to use process.exit node call)
-
-// tracer.close(function() {
-//   process.exit();
-// });
-//Note: the above close call just closes right away, like it is sync, not async.
-
-
-const closeTracer = () => tracer.close();
-
-setTimeout(closeTracer, 12000);
+tracer.close(() => process.exit());

@@ -7,7 +7,7 @@ const sayHello = helloTo => {
   const span = tracer.startSpan("say-hello");
   span.setTag("hello-to", helloTo);
   const helloStr = formatString(span, helloTo);
-  printHello(span, helloStr);
+  printString(span, helloStr);
   span.finish();
 };
 
@@ -22,7 +22,7 @@ const formatString = (rootSpan, helloTo) => {
   return helloStr;
 };
 
-const printHello = (rootSpan, helloStr) => {
+const printString = (rootSpan, helloStr) => {
   const span = tracer.startSpan("consoleLog", { childOf: rootSpan.context() });
   console.log(helloStr);
   span.log({ event: "print-string" });
@@ -34,6 +34,4 @@ const helloTo = process.argv[2];
 
 sayHello(helloTo);
 
-const closeTracer = () => tracer.close();
-
-setTimeout(closeTracer, 12000);
+tracer.close(() => process.exit());

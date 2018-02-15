@@ -1,7 +1,3 @@
-**NOTE**
-
-This README is currently incomplete / unfinished. Please refer to respective README in tutorials for one of the other languages
-
 # Lesson 2 - Context and Tracing Functions
 
 ## Objectives
@@ -33,7 +29,7 @@ const sayHello = helloTo => {
   const span = tracer.startSpan("say-hello");
   span.setTag("hello-to", helloTo);
   const helloStr = formatString(span, helloTo);
-  printHello(span, helloStr);
+  printString(span, helloStr);
   span.finish();
 };
 
@@ -46,7 +42,7 @@ const formatString = (span, helloTo) => {
   return helloStr;
 };
 
-const printHello = (span, helloStr) => {
+const printString = (span, helloStr) => {
   console.log(helloStr);
   span.log({ event: "print-string" });
 };
@@ -66,7 +62,7 @@ const formatString = (rootSpan, helloTo) => {
   return helloStr;
 };
 
-const printHello = (rootSpan, helloStr) => {
+const printString = (rootSpan, helloStr) => {
   const span = tracer.startSpan("consoleLog");
   console.log(helloStr);
   span.log({ event: "print-string" });
@@ -116,7 +112,7 @@ const formatString = (rootSpan, helloTo) => {
   return helloStr;
 };
 
-const printHello = (rootSpan, helloStr) => {
+const printString = (rootSpan, helloStr) => {
   const span = tracer.startSpan("consoleLog", { childOf: rootSpan });
   console.log(helloStr);
   span.log({ event: "print-string" });
@@ -126,7 +122,7 @@ const printHello = (rootSpan, helloStr) => {
 
 If we think of the trace as a directed acyclic graph where nodes are the spans and edges are the causal relationships between them, then the `childOf` option is used to create one such edge between `span` and `rootSpan`. In the API the edges are represented by `SpanReference` type that consists of a `SpanContext` and a label. The `SpanContext` represents an immutable, thread-safe portion of the span that can be used to establish references or to propagate it over the wire. The label, or `ReferenceType`, describes the nature of the relationship. `ChildOf` relationship means that the `rootSpan` has a logical dependency on the child `span` before `rootSpan` can complete its operation. Another standard reference type in OpenTracing is `FollowsFrom`, which means the `rootSpan` is the ancestor in the DAG, but it does not depend on the completion of the child span, for example if the child represents a best-effort, fire-and-forget cache write.
 
-If we modify the `formatString` and `printHello` functions accordingly and run the app, we'll see that all reported spans now belong to the same trace:
+If we modify the `formatString` and `printString` functions accordingly and run the app, we'll see that all reported spans now belong to the same trace:
 
 ```
 node lesson02/exercise/hello.js Kara
@@ -135,7 +131,6 @@ INFO  Reporting span f807cdcd1b44f817:9cb1e0041868bfcd:f807cdcd1b44f817:1
 Hello, Kara!
 INFO  Reporting span f807cdcd1b44f817:6d38799352b613ec:f807cdcd1b44f817:1
 INFO  Reporting span f807cdcd1b44f817:f807cdcd1b44f817:0:1
-
 ```
 
 We can also see that the first hexadecimal segment of the output for all three spans is `f807cdcd1b44f817`, which is the Jaeger trace ID of the root span. Additionally, the first two reported spans display the trace ID of the root span in the 3rd position, instead of `0`. The root span is reported last because it is the last one to finish.

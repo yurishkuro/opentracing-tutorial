@@ -1,7 +1,3 @@
-**NOTE**
-
-This README is currently incomplete / unfinished. Please refer to respective README in tutorials for one of the other languages
-
 # Lesson 1 - Hello World
 
 ## Objectives
@@ -72,34 +68,6 @@ We are using the following basic features of the OpenTracing API:
 * each `span` must be finished by calling its `finish()` function
 * the start and end timestamps of the span will be captured automatically by the tracer implementation
 
-<!---
-However, calling `finish()` manually is a bit tedious, we can use span as a context manager instead:
-// Not yet implemented in the code snippet below
-```javascript
-const sayHello = helloTo => {
-  const span = tracer.startSpan("say-hello");
-  const helloStr = `Hello, ${helloTo}!`;
-  console.log(helloStr);
-};
-```
-We could write a context manager in js using promises.
-
-
-```
-function using(resource, fn) {
-  // wraps it in case the resource was not promise
-  var pResource = Promise.resolve(resource);
-  return pResource.then(fn).finally(function() {
-    return pResource.then(function(resource) {
-      return resource.dispose();
-    });
-  });
-}
-//this needs a rewrite to our purposes.
-```
-
---->
-
 If we run this program, we will see no difference, and no traces in the tracing UI.
 That's because the variable `new opentracing.Tracer()` points to a no-op tracer by default.
 
@@ -144,14 +112,12 @@ const tracer = initTracer("hello-world");
 Note that we are passing a string `"hello-world"` to the init method. It is used to mark all spans emitted by
 the tracer as originating from a `hello-world` service.
 
-<!---
-There's one more thing we need to do. Jaeger Tracer is primarily designed for long-running server processes,
-so it has an internal buffer of spans that is flushed by a background thread. Since our program exists immediately,
-it may not have time to flush the spans to Jaeger backend.
+There's one more thing we need to do. Jaeger Tracer is primarily designed for long-running server processes, so it has an internal buffer of spans that is flushed by a background thread. Since our program exists immediately,
+it may not have time to flush the spans to Jaeger backend. Let's add the following to the end of `hello.js`:
 
-## Not yet implemented, as spans are showing in Jaeger UI.
-True, however calling tracer.close() in Python instructions shuts down python process in terminal.  This wasn't happening with our node code, so added tracer.close() with a setTimeout to Lesson01 solution. However, unlike with Python needed a long enforced wait (12 seconds) to ensure the spans were sent to Jaeger backend and showed in UI. 
---->
+```javascript
+tracer.close(() => process.exit());
+```
 
 If we run the program now, we should see a span logged:
 
