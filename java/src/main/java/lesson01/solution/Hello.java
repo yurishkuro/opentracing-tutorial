@@ -2,8 +2,10 @@ package lesson01.solution;
 
 import io.opentracing.Span;
 import com.google.common.collect.ImmutableMap;
+import com.uber.jaeger.Configuration;
+import com.uber.jaeger.Configuration.ReporterConfiguration;
+import com.uber.jaeger.Configuration.SamplerConfiguration;
 import com.uber.jaeger.Tracer;
-import lib.Tracing;
 
 public class Hello {
 
@@ -31,8 +33,15 @@ public class Hello {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
+        Tracer tracer = initTracer("hello-world");
         new Hello(tracer).sayHello(helloTo);
         tracer.close();
+    }
+
+    public static com.uber.jaeger.Tracer initTracer(String service) {
+        SamplerConfiguration samplerConfig = new SamplerConfiguration("const", 1);
+        ReporterConfiguration reporterConfig = new ReporterConfiguration(true, null, null, null, null);
+        Configuration config = new Configuration(service, samplerConfig, reporterConfig);
+        return (com.uber.jaeger.Tracer) config.getTracer();
     }
 }
