@@ -69,21 +69,21 @@ with two arguments, e.g. `Bryan Bonjour`. The `publisher` should print `Bonjour,
 
 ```
 # client
-$ ./run.sh lesson04.exercise.Hello Bryan Bonjour
+$ ./run.sh lesson04.solution.Hello Bryan Bonjour
 INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:ef06ddba375ff053:e6ee8a816c8386ce:1 - formatString
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:20cdfed1d23892c1:e6ee8a816c8386ce:1 - printHello
 INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:e6ee8a816c8386ce:0:1 - say-hello
 
 # formatter
-$ ./run.sh lesson04.exercise.Formatter server
+$ ./run.sh lesson04.solution.Formatter server
 [skip noise]
 INFO org.eclipse.jetty.server.Server: Started @3508ms
 INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:cd2c1d243ddf319b:ef06ddba375ff053:1 - format
 127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 15 "-" "okhttp/3.9.0" 69
 
 # publisher
-$ ./run.sh lesson03.exercise.Publisher server
+$ ./run.sh lesson03.solution.Publisher server
 [skip noise]
 INFO org.eclipse.jetty.server.Server: Started @3388ms
 Bonjour, Bryan!

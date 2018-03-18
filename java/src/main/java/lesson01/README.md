@@ -30,7 +30,6 @@ public class Hello {
         }
         String helloTo = args[0];
         new Hello().sayHello(helloTo);
-        tracer.close();
     }
 }
 ```
@@ -79,6 +78,7 @@ public class Hello {
         }
         String helloTo = args[0];
         new Hello(GlobalTracer.get()).sayHello(helloTo);
+        tracer.close();
     }
 }
 ```
@@ -137,10 +137,10 @@ the tracer as originating from a `hello-world` service.
 If we run the program now, we should see a span logged:
 
 ```
-$ ./run.sh lesson01.exercise.Hello Bryan
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+$ ./run.sh lesson01.solution.Hello Bryan
+[lesson01.solution.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
 Hello, Bryan!
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
+[lesson01.solution.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
 ```
 
 If you have Jaeger backend running, you should be able to see the trace in the UI.
