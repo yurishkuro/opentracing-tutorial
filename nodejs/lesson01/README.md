@@ -15,20 +15,21 @@ Learn how to:
 Let's create a simple Node program `lesson01/exercise/hello.js` that takes an argument and prints "Hello, {arg}!".
 
 ```
-mkdir lesson01/exercise
+mkdir -p lesson01/exercise
 touch lesson01/exercise/hello.js
 ```
 
+In lesson01/exercise/hello.js:
+
 ```javascript
-# lesson01/exercise/hello.js
 const assert = require("assert");
 
 const sayHello = helloTo => {
   const helloStr = `Hello, ${helloTo}!`;
   console.log(helloStr);
-}
+};
 
-assert.ok(process.argv.length == 3, 'expecting one argument');
+assert(process.argv.length == 3, "Expecting one argument");
 const helloTo = process.argv[2];
 sayHello(helloTo);
 ```
@@ -42,7 +43,7 @@ Hello, Kara!
 
 ### Create a trace
 
-A trace is a directed acyclic graph of spans. A span is a logical representation of some work done in your application.
+A trace is a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph) of spans. A span is a logical representation of some work done in your application.
 Each span has these minimum attributes: an operation name, a start time, and a finish time.
 
 Let's create a trace that consists of just a single span. To do that we need an instance of the `opentracing.Tracer`.
@@ -162,9 +163,9 @@ for recommended tags and log fields.
 In the case of `hello Kara`, the string "Kara" is a good candidate for a span tag, since it applies
 to the whole span and not to a particular moment in time. We can record it like this:
 
-```
+```javascript
 const span = tracer.startSpan("say-hello");
-span.setTag("hello-to", helloTo)
+span.setTag("hello-to", helloTo);
 ```
 
 #### Using Logs

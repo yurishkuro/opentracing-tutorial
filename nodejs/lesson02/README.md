@@ -136,3 +136,8 @@ INFO  Reporting span f807cdcd1b44f817:f807cdcd1b44f817:0:1
 We can also see that the first hexadecimal segment of the output for all three spans is `f807cdcd1b44f817`, which is the Jaeger trace ID of the root span. Additionally, the first two reported spans display the trace ID of the root span in the 3rd position, instead of `0`. The root span is reported last because it is the last one to finish.
 
 If we find this trace in the UI, it will show a proper parent-child relationship between the spans.
+
+### Propagate the in-process context
+
+You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object as the first argument to each function. JavaScript does not support the notion of thread-local variables,
+so in order to link the individual spans together we _do need to pass something_.

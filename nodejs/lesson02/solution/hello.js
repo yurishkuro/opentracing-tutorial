@@ -29,7 +29,7 @@ const printString = (rootSpan, helloStr) => {
   span.finish();
 };
 
-assert.ok(process.argv.length == 3, "Expecting one argument");
+assert(process.argv.length == 3, "Expecting one argument");
 const helloTo = process.argv[2];
 
 sayHello(helloTo);
