@@ -139,5 +139,44 @@ If we find this trace in the UI, it will show a proper parent-child relationship
 
 ### Propagate the in-process context
 
-You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object as the first argument to each function. JavaScript does not support the notion of thread-local variables,
-so in order to link the individual spans together we _do need to pass something_.
+You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object as the first argument to each function. JavaScript does not support the notion of thread-local variables, so in order to link the individual spans together we _do need to pass something_. To avoid polluting the application with tracing code, we will create a context object in which to store the currently active span and pass that instead. The context object enables us to pass data, in addition to the span, that may be relevant to the application.
+
+First, we need to create a context object, which we'll name `ctx`, in the main `sayHello()` function and store the span in it:
+
+```javascript
+const ctx = { span };
+```
+
+Then we pass the `ctx` object instead of the `rootSpan`:
+
+```javascript
+const helloStr = formatString(ctx, helloTo);
+printString(ctx, helloStr);
+```
+
+And we modify the `formatString()` and `printString()` functions to change the value of the span property of the passed in `ctx` object. We set the value of the span property to be a new span that is defined as a `childOf` the span contained as a property on the passed in `ctx` object:
+
+```javascript
+const formatString = (ctx, helloTo) => {
+  ctx = {
+    span: tracer.startSpan("format", { childOf: ctx.span }),
+  };
+  ...
+}
+const printString = (ctx, helloStr) => {
+    ctx = {
+      span: tracer.startSpan("consoleLog", { childOf: ctx.span }),
+    };
+  ...
+}
+```
+
+If we run this modified program, we will see that all three reported spans still have the same trace ID.
+
+This `ctx` object gives us much greater control and flexibility in passing data between spans. If our functions were calling more functions, we could keep that context instance and pass it down, rather than passing the top-level context.
+
+## Conclusion
+
+The complete program can be found in the [solution](./solution) package.
+
+Next lesson: [Tracing RPC Requests](../lesson03).

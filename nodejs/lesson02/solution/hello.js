@@ -5,28 +5,33 @@ const tracer = initTracer("hello-world");
 
 const sayHello = helloTo => {
   const span = tracer.startSpan("say-hello");
+  const ctx = { span };
   span.setTag("hello-to", helloTo);
-  const helloStr = formatString(span, helloTo);
-  printString(span, helloStr);
+  const helloStr = formatString(ctx, helloTo);
+  printString(ctx, helloStr);
   span.finish();
 };
 
-const formatString = (rootSpan, helloTo) => {
-  const span = tracer.startSpan("format", { childOf: rootSpan.context() });
+const formatString = (ctx, helloTo) => {
+  ctx = {
+    span: tracer.startSpan("format", { childOf: ctx.span }),
+  };
   const helloStr = `Hello, ${helloTo}!`;
-  span.log({
+  ctx.span.log({
     event: "string-format",
     value: helloStr,
   });
-  span.finish();
+  ctx.span.finish();
   return helloStr;
 };
 
-const printString = (rootSpan, helloStr) => {
-  const span = tracer.startSpan("consoleLog", { childOf: rootSpan.context() });
+const printString = (ctx, helloStr) => {
+  ctx = {
+    span: tracer.startSpan("consoleLog", { childOf: ctx.span }),
+  };
   console.log(helloStr);
-  span.log({ event: "print-string" });
-  span.finish();
+  ctx.span.log({ event: "print-string" });
+  ctx.span.finish();
 };
 
 assert(process.argv.length == 3, "Expecting one argument");

@@ -189,7 +189,7 @@ The log statements might look a bit strange if you have not previously worked wi
 Rather than formatting a log message into a single string that is easy for humans to read, structured
 logging APIs encourage you to separate bits and pieces of that message into key-value pairs that can be
 automatically processed by log aggregation systems. The idea comes from the realization that today most
-logs are processed by machines rather than humans. Just [google "structured-logging"](https://www.google.com/search?q=structured-logging)for many articles on this topic.
+logs are processed by machines rather than humans. Just [google "structured-logging"](https://www.google.com/search?q=structured-logging) for many articles on this topic.
 
 The OpenTracing API for JavaScript exposes a structured logging API method `log` that takes a dictionary, or hash,
 of key-value pairs.
