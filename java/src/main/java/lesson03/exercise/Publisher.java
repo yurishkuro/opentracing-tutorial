@@ -1,14 +1,14 @@
 package lesson03.exercise;
 
-import io.dropwizard.Application;
-import io.dropwizard.Configuration;
-import io.dropwizard.setup.Environment;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+import io.dropwizard.Application;
+import io.dropwizard.Configuration;
+import io.dropwizard.setup.Environment;
 
 public class Publisher extends Application<Configuration> {
 
@@ -23,7 +23,7 @@ public class Publisher extends Application<Configuration> {
         }
     }
 
-	@Override
+    @Override
     public void run(Configuration configuration, Environment environment) throws Exception {
         environment.jersey().register(new PublisherResource());
     }

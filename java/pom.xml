@@ -9,7 +9,7 @@
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jaeger.version>0.23.0</jaeger.version>
+        <jaeger.version>0.26.0</jaeger.version>
         <slf4j.version>1.7.5</slf4j.version>
         <guava.version>23.0</guava.version>
         <dropwizard.version>1.1.4</dropwizard.version>

@@ -1,13 +1,5 @@
 package lesson03.solution;
 
-import com.google.common.collect.ImmutableMap;
-
-import io.dropwizard.Application;
-import io.dropwizard.Configuration;
-import io.dropwizard.setup.Environment;
-import io.opentracing.Scope;
-import io.opentracing.Tracer;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -16,10 +8,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.ImmutableMap;
+
+import io.dropwizard.Application;
+import io.dropwizard.Configuration;
+import io.dropwizard.setup.Environment;
+import io.opentracing.Scope;
+import io.opentracing.Tracer;
 import lib.Tracing;
 
 public class Formatter extends Application<Configuration> {
-
     private final Tracer tracer;
 
     private Formatter(Tracer tracer) {
@@ -38,6 +36,7 @@ public class Formatter extends Application<Configuration> {
                 return helloStr;
             }
         }
+
     }
 
     @Override
@@ -48,6 +47,7 @@ public class Formatter extends Application<Configuration> {
     public static void main(String[] args) throws Exception {
         System.setProperty("dw.server.applicationConnectors[0].port", "8081");
         System.setProperty("dw.server.adminConnectors[0].port", "9081");
+
         Tracer tracer = Tracing.init("formatter");
         new Formatter(tracer).run(args);
     }

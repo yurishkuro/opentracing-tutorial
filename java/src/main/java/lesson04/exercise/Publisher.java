@@ -1,4 +1,4 @@
-package lesson04.solution;
+package lesson04.exercise;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

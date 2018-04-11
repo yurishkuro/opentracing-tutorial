@@ -18,7 +18,7 @@ To see how it works in OpenTracing, let's take the application we built in Lesso
 code from [../lesson03/solution](../lesson03/solution) package:
 
 ```
-cp src/main/java/lesson03/solution/*java src/main/java/lesson04/solution
+cp src/main/java/lesson03/solution/*java src/main/java/lesson04/exercise
 ```
 
 The `formatter` service takes the `helloTo` parameter and returns a string `Hello, {helloTo}!`. Let's modify
@@ -26,7 +26,8 @@ it so that we can customize the greeting too, but without modifying the public A
 
 ### Set Baggage in the Client
 
-Let's add/replace the following code to `Hello.java`:
+Let's add a new parameter to our Hello's main method, so that it accepts a `greeting` in addition to a name.
+This is how the main method would look like in the end:
 
 ```java
 public static void main(String[] args) {
@@ -38,14 +39,13 @@ public static void main(String[] args) {
     Tracer tracer = Tracing.init("hello-world");
     new Hello(tracer).sayHello(helloTo, greeting);
     tracer.close();
-    System.exit(0); // okhttpclient sometimes hangs maven otherwise
 }
 ```
 
 And add this instruction to `sayHello` method after starting the span:
 
 ```java
-span.setBaggageItem("greeting", greeting);
+scope.span().setBaggageItem("greeting", greeting);
 ```
 
 By doing this we read a second command line argument as a "greeting" and store it in the baggage under `"greeting"` key.
@@ -55,7 +55,7 @@ By doing this we read a second command line argument as a "greeting" and store i
 Add the following code to the `formatter`'s HTTP handler:
 
 ```java
-String greeting = span.getBaggageItem("greeting");
+String greeting = scope.span().getBaggageItem("greeting");
 if (greeting == null) {
     greeting = "Hello";
 }
@@ -68,13 +68,6 @@ As in Lesson 3, first start the `formatter` and `publisher` in separate terminal
 with two arguments, e.g. `Bryan Bonjour`. The `publisher` should print `Bonjour, Bryan!`.
 
 ```
-# client
-$ ./run.sh lesson04.exercise.Hello Bryan Bonjour
-INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:ef06ddba375ff053:e6ee8a816c8386ce:1 - formatString
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:20cdfed1d23892c1:e6ee8a816c8386ce:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:e6ee8a816c8386ce:0:1 - say-hello
-
 # formatter
 $ ./run.sh lesson04.exercise.Formatter server
 [skip noise]
@@ -83,12 +76,19 @@ INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:
 127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 15 "-" "okhttp/3.9.0" 69
 
 # publisher
-$ ./run.sh lesson03.exercise.Publisher server
+$ ./run.sh lesson04.exercise.Publisher server
 [skip noise]
 INFO org.eclipse.jetty.server.Server: Started @3388ms
 Bonjour, Bryan!
 INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:f46156fcd7d3abd3:20cdfed1d23892c1:1 - publish
 127.0.0.1 - - "GET /publish?helloStr=Bonjour,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 92
+
+# client
+$ ./run.sh lesson04.exercise.Hello Bryan Bonjour
+INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:ef06ddba375ff053:e6ee8a816c8386ce:1 - formatString
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:20cdfed1d23892c1:e6ee8a816c8386ce:1 - printHello
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:e6ee8a816c8386ce:0:1 - say-hello
 ```
 
 ### What's the Big Deal?

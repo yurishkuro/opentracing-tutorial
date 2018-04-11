@@ -1,8 +1,9 @@
 package lesson01.solution;
 
-import io.opentracing.Span;
 import com.google.common.collect.ImmutableMap;
 import com.uber.jaeger.Tracer;
+
+import io.opentracing.Span;
 import lib.Tracing;
 
 public class Hello {

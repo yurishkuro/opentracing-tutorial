@@ -12,13 +12,12 @@ Learn how to:
 
 ### Hello-World Microservice App
 
-To save you some typing, we are going to start this lesson with a partial solution
-available in the [exercise](./exercise) package. We are still working with the same
-Hello World application, except that the `formatString` and `printHello` functions
-are now rewritten as RPC calls to two downstream services, `formatter` and `publisher`.
-The package is organized as follows:
+We'll start this lesson with some seed files in our `exercise` directory. This is mainly what we've accomplished in the
+previous lessons, plus a small refactoring to avoid duplicating code. We've also changed the `formatString` and 
+`printHello` methods to make RPC calls to two downstream services, `formatter` and `publisher`. The package is organized
+as follows:
 
-  * `Hello.java` is a copy from Lesson 2 modified to make HTTP calls
+  * `Hello.java` is based on the code from the lesson 2, modified to make HTTP calls
   * `Formatter.java` is a Dropwizard-based HTTP server that responds to a request like
     `GET 'http://localhost:8081/format?helloTo=Bryan'` and returns `"Hello, Bryan!"` string
   * `Publisher.java` is another HTTP server that responds to requests like
@@ -88,14 +87,14 @@ request we need to call `tracer.inject` before building the HTTP request:
 Tags.SPAN_KIND.set(tracer.activeSpan(), Tags.SPAN_KIND_CLIENT);
 Tags.HTTP_METHOD.set(tracer.activeSpan(), "GET");
 Tags.HTTP_URL.set(tracer.activeSpan(), url.toString());
-tracer.inject(tracer.activeSpan().context(), Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
+tracer.inject(tracer.activeSpan().context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
 ```
 
 In this case the `carrier` is HTTP request headers object, which we adapt to the carrier API
 by wrapping in `RequestBuilderCarrier` helper class. 
 
 ```java
-private static class RequestBuilderCarrier implements io.opentracing.propagation.TextMap {
+public class RequestBuilderCarrier implements io.opentracing.propagation.TextMap {
     private final Request.Builder builder;
 
     RequestBuilderCarrier(Request.Builder builder) {
@@ -103,7 +102,7 @@ private static class RequestBuilderCarrier implements io.opentracing.propagation
     }
 
     @Override
-    public Iterator<Entry<String, String>> iterator() {
+    public Iterator<Map.Entry<String, String>> iterator() {
         throw new UnsupportedOperationException("carrier is write-only");
     }
 
@@ -124,7 +123,14 @@ Our servers are currently not instrumented for tracing. We need to do the follow
 
 #### Add some imports
 
+For the code snippets we are adding, we need a few extra imports:
+
 ```java
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+
+import com.google.common.collect.ImmutableMap;
+
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import lib.Tracing;
@@ -151,7 +157,7 @@ new Formatter(tracer).run(args);
 
 #### Extract the span context from the incoming request using `tracer.extract`
 
-First, add a helper function:
+First, let's add a helper function on the Hello class:
 
 ```java
 public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
@@ -183,12 +189,15 @@ and tagging the span as `span.kind=server`. Instead of using a dedicated adapter
 JAXRS `HttpHeaders` type into `io.opentracing.propagation.TextMap`, we are copying the headers to a plain
 `HashMap<String, String>` and using a standard adapter `TextMapExtractAdapter`.
 
+It would be better to have this in a more appropriate place. We've prepared a `Tracing` class under the `lib`
+package: that's what we'll be using in the future.
+
 Now change the `FormatterResource` handler method to use `startServerSpan`:
 
 ```java
 @GET
 public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
-    try (Scope scope = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
+    try (Scope scope = startServerSpan(tracer, httpHeaders, "format")) {
         String helloStr = String.format("Hello, %s!", helloTo);
         scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
@@ -196,19 +205,16 @@ public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders
 }
 ```
 
+#### Apply the same to the Publisher
+
+Now, just apply the same changes to the publisher.
+
 ### Take It For a Spin
 
 As before, first run the `formatter` and `publisher` apps in separate terminals.
 Then run `lesson03.exercise.Hello`. You should see the outputs like this:
 
 ```
-# client
-$ ./run.sh lesson03.exercise.Hello Bryan
-INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:5fe2d9de96c3887a:0:1 - say-hello
-
 # formatter
 $ ./run.sh lesson03.exercise.Formatter server
 [skip noise]
@@ -223,6 +229,13 @@ INFO org.eclipse.jetty.server.Server: Started @3388ms
 Hello, Bryan!
 INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:4a2c39e462cb2a92:62d73167c129ecd7:1 - publish
 127.0.0.1 - - "GET /publish?helloStr=Hello,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 80
+
+# client
+$ ./run.sh lesson03.exercise.Hello Bryan
+INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello
+INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:5fe2d9de96c3887a:0:1 - say-hello
 ```
 
 Note how all recorded spans show the same trace ID `5fe2d9de96c3887a`. This is a sign

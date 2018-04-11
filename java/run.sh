@@ -10,6 +10,11 @@ shift
 
 set -e
 
-mvn -q package
+mvn -q package dependency:copy-dependencies
 
-mvn exec:java -Dexec.mainClass="$className" -Dexec.args="$*" | grep -v -e '\[INFO\]' -e '\[WARNING\]' -e '\[ERROR\]'
+CLASSPATH=""
+for jar in $(ls target/dependency/*.jar target/java-opentracing-tutorial-*.jar); do
+  CLASSPATH=$CLASSPATH:$jar
+done
+
+java -cp $CLASSPATH $className $*

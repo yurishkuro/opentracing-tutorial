@@ -1,14 +1,16 @@
 package lesson03.exercise;
 
-import io.opentracing.Scope;
 import java.io.IOException;
+
 import com.google.common.collect.ImmutableMap;
 import com.uber.jaeger.Tracer;
+
+import io.opentracing.Scope;
+import lib.Tracing;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.HttpUrl;
-import lib.Tracing;
 
 public class Hello {
 
@@ -68,6 +70,5 @@ public class Hello {
         Tracer tracer = Tracing.init("hello-world");
         new Hello(tracer).sayHello(helloTo);
         tracer.close();
-        System.exit(0); // okhttpclient sometimes hangs maven otherwise
     }
 }

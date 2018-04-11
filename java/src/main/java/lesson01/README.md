@@ -102,7 +102,7 @@ Our `pom.xml` already imports Jaeger:
 <dependency>
     <groupId>com.uber.jaeger</groupId>
     <artifactId>jaeger-core</artifactId>
-    <version>0.23.0</version>
+    <version>0.26.0</version>
 </dependency>
 ```
 
@@ -192,7 +192,7 @@ time, so we can log their completion:
 String helloStr = String.format("Hello, %s!", helloTo);
 span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
 
-System.out.println(helloStr)
+System.out.println(helloStr);
 span.log(ImmutableMap.of("event", "println"));
 ```
 
