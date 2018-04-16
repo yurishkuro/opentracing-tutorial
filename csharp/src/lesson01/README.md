@@ -12,37 +12,40 @@ Learn how to:
 
 ### A simple Hello-World program
 
-Let's create a simple Java program `lesson01/exercise/Hello.java` that takes an argument and prints `"Hello, {arg}!"`.
+Let's create a simple C# program `lesson01/exercise/Hello.cs` that takes an argument and prints `"Hello, {arg}!"`.
 
-```java
-package lesson01.exercise;
+```csharp
+using System;
 
-public class Hello {
-
-    private void sayHello(String helloTo) {
-        String helloStr = String.format("Hello, %s!", helloTo);
-        System.out.println(helloStr);
-    }
-
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            throw new IllegalArgumentException("Expecting one argument");
+namespace OpenTracing.Tutorial.Lesson01.Exercise
+{
+    internal class Hello
+    {
+        public void SayHello(string helloTo)
+        {
+            var helloString = $"Hello, {helloTo}!";
+            Console.WriteLine(helloString);
         }
-        String helloTo = args[0];
-        new Hello().sayHello(helloTo);
-        tracer.close();
+        public static void Main(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Expecting one argument");
+            }
+
+            var helloTo = args[0];
+            var hello = new Hello();
+            hello.SayHello(helloTo);
+        }
     }
 }
 ```
 
 Run it:
 ```
-$ ./run.sh lesson01.exercise.Hello Bryan
+$ dotnet run Bryan
 Hello, Bryan!
 ```
-
-Here we're using a simple helper script `run.sh` that executes a class via Maven,
-as well as strips out some of it diagnostic logging.
 
 ### Create a trace
 
@@ -52,98 +55,126 @@ Each span has these minimum attributes: an operation name, a start time, and a f
 Let's create a trace that consists of just a single span. To do that we need an instance of the `io.opentracing.Tracer`.
 We can use a global instance returned by `io.opentracing.util.GlobalTracer.get()`.
 
-```java
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+```csharp
+using System;
+using OpenTracing.Util;
 
-public class Hello {
+namespace OpenTracing.Tutorial.Lesson01.Exercise
+{
+    internal class Hello
+    {
+        private readonly ITracer tracer;
 
-    private final io.opentracing.Tracer tracer;
-
-    private Hello(io.opentracing.Tracer tracer) {
-        this.tracer = tracer;
-    }
-
-    private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
-
-        String helloStr = String.format("Hello, %s!", helloTo);
-        System.out.println(helloStr);
-
-        span.finish();
-    }
-
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            throw new IllegalArgumentException("Expecting one argument");
+        public Hello(OpenTracing.ITracer tracer)
+        {
+            this.tracer = tracer;
         }
-        String helloTo = args[0];
-        new Hello(GlobalTracer.get()).sayHello(helloTo);
+
+        public void SayHello(string helloTo)
+        {
+            var span = tracer.BuildSpan("say-hello").Start();
+            var helloString = $"Hello, {helloTo}!";
+            Console.WriteLine(helloString);
+            span.Finish();
+        }
+
+        public static void Main(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Expecting one argument");
+            }
+
+            var helloTo = args[0];
+            new Hello(GlobalTracer.Instance).SayHello(helloTo);
+        }
     }
 }
 ```
 
 We are using the following basic features of the OpenTracing API:
-  * a `tracer` instance is used to create a span builder via `buildSpan()`
+  * a `tracer` instance is used to create a span builder via `BuildSpan()`
   * each `span` is given an _operation name_, `"say-hello"` in this case
-  * builder is used to create a span via `startManual()`
-  * each `span` must be finished by calling its `finish()` function
+  * builder is used to create a span via `Start()`
+  * each `span` must be finished by calling its `Finish()` function
   * the start and end timestamps of the span will be captured automatically by the tracer implementation
 
 However, if we run this program, we will see no difference, and no traces in the tracing UI.
-That's because the function `GlobalTracer.get()` returns a no-op tracer by default.
+That's because the function `GlobalTracer.Instance` returns a no-op tracer by default.
 
 ### Initialize a real tracer
 
-Let's create an instance of a real tracer, such as Jaeger (http://github.com/uber/jaeger-client-java).
-Our `pom.xml` already imports Jaeger:
-
-```xml
-<dependency>
-    <groupId>com.uber.jaeger</groupId>
-    <artifactId>jaeger-core</artifactId>
-    <version>0.23.0</version>
-</dependency>
-```
+Let's create an instance of a real tracer, such as Jaeger (https://github.com/jaegertracing/jaeger-client-csharp).
 
 First let's define a helper function that will create a tracer.
 
-```java
-import com.uber.jaeger.Configuration;
-import com.uber.jaeger.Configuration.ReporterConfiguration;
-import com.uber.jaeger.Configuration.SamplerConfiguration;
+```csharp
+using Jaeger.Core;
+using Jaeger.Core.Reporters;
+using Jaeger.Transport.Thrift.Transport;
 
-public static com.uber.jaeger.Tracer initTracer(String service) {
-    SamplerConfiguration samplerConfig = new SamplerConfiguration("const", 1);
-    ReporterConfiguration reporterConfig = new ReporterConfiguration(true, null, null, null, null);
-    Configuration config = new Configuration(service, samplerConfig, reporterConfig);
-    return (com.uber.jaeger.Tracer) config.getTracer();
+public static class Tracing
+{
+    public static Tracer Init(string serviceName)
+    {
+        var loggerFactory = new LoggerFactory().AddConsole();
+        var loggingReporter = new LoggingReporter(loggerFactory);
+        var remoteReporter = new RemoteReporter.Builder(new JaegerUdpTransport())
+            .WithLoggerFactory(loggerFactory)
+            .Build();
+
+        return new Tracer.Builder(serviceName)
+            .WithLoggerFactory(loggerFactory)
+            .WithReporter(new CompositeReporter(loggingReporter, remoteReporter))
+            .Build();
+    }
 }
 ```
 
 To use this instance, let's change the main function:
 
-```java
-import com.uber.jaeger.Tracer;
-
-Tracer tracer = initTracer("hello-world");
-new Hello(tracer).sayHello(helloTo);
-tracer.close();
+```csharp
+using (var tracer = Tracing.Init("say-hello"))
+{
+    new Hello(tracer).SayHello(helloTo);
+}
 ```
 
-Note that we are passing a string `hello-world` to the init method. It is used to mark all spans emitted by
-the tracer as originating from a `hello-world` service.
+Note that we are passing a string `say-world` to the init method. It is used to mark all spans emitted by
+the tracer as originating from a `say-world` service.
 
 If we run the program now, we should see a span logged:
 
 ```
-$ ./run.sh lesson01.exercise.Hello Bryan
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+$ dotnet run Bryan
 Hello, Bryan!
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 11193910068750926516,
+            "Low": 1595153065594434051,
+            "IsValid": true
+          },
+          "SpanId": {},
+          "ParentId": {},
+          "Flags": 1,
+          "IsSampled": true
+        },
+        "FinishTimestampUtc": "2018-04-16T13:29:17.7489041Z"
+        "Logs": [],
+        "OperationName": "say-hello",
+        "References": [],
+        "StartTimestampUtc": "2018-04-16T13:29:17.7458831Z",
+        "Tags": {
+          "sampler.type": "const",
+          "sampler.param": true
+        }
+ }
 ```
 
-If you have Jaeger backend running, you should be able to see the trace in the UI.
+If you have the Jaeger backend running, you should be able to see the trace in the UI.
 
 ### Annotate the Trace with Tags and Logs
 

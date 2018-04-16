@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Data.SqlTypes;
-using OpenTracing.Util;
+using Jaeger.Core;
+using Jaeger.Core.Reporters;
+using Jaeger.Transport.Thrift.Transport;
+using Microsoft.Extensions.Logging;
 
 namespace OpenTracing.Tutorial.Lesson01.Exercise
 {
@@ -29,7 +31,27 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
             }
 
             var helloTo = args[0];
-            new Hello(GlobalTracer.Instance).SayHello(helloTo);
+            using (var tracer = Tracing.Init("say-hello"))
+            {
+                new Hello(tracer).SayHello(helloTo);
+            }
+        }
+    }
+
+    public static class Tracing
+    {
+        public static Tracer Init(string serviceName)
+        {
+            var loggerFactory = new LoggerFactory().AddConsole();
+            var loggingReporter = new LoggingReporter(loggerFactory);
+            var remoteReporter = new RemoteReporter.Builder(new JaegerUdpTransport())
+                .WithLoggerFactory(loggerFactory)
+                .Build();
+
+            return new Tracer.Builder(serviceName)
+                .WithLoggerFactory(loggerFactory)
+                .WithReporter(new CompositeReporter(loggingReporter, remoteReporter))
+                .Build();
         }
     }
 }
