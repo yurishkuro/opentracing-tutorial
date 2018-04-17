@@ -113,28 +113,25 @@ using Jaeger.Core;
 using Jaeger.Core.Reporters;
 using Jaeger.Transport.Thrift.Transport;
 
-public static class Tracing
+private static Tracer InitTracer(string serviceName)
 {
-    public static Tracer Init(string serviceName)
-    {
-        var loggerFactory = new LoggerFactory().AddConsole();
-        var loggingReporter = new LoggingReporter(loggerFactory);
-        var remoteReporter = new RemoteReporter.Builder(new JaegerUdpTransport())
-            .WithLoggerFactory(loggerFactory)
-            .Build();
+    var loggerFactory = new LoggerFactory().AddConsole();
+    var loggingReporter = new LoggingReporter(loggerFactory);
+    var remoteReporter = new RemoteReporter.Builder(new JaegerUdpTransport())
+        .WithLoggerFactory(loggerFactory)
+        .Build();
 
-        return new Tracer.Builder(serviceName)
-            .WithLoggerFactory(loggerFactory)
-            .WithReporter(new CompositeReporter(loggingReporter, remoteReporter))
-            .Build();
-    }
+    return new Tracer.Builder(serviceName)
+        .WithLoggerFactory(loggerFactory)
+        .WithReporter(new CompositeReporter(loggingReporter, remoteReporter))
+        .Build();
 }
 ```
 
 To use this instance, let's change the main function:
 
 ```csharp
-using (var tracer = Tracing.Init("say-hello"))
+using (var tracer = InitTracer("say-hello"))
 {
     new Hello(tracer).SayHello(helloTo);
 }
@@ -208,35 +205,41 @@ for recommended tags and log fields.
 In the case of `Hello Bryan`, the string `"Bryan"` is a good candidate for a span tag, since it applies
 to the whole span and not to a particular moment in time. We can record it like this:
 
-```java
-Span span = tracer.buildSpan("say-hello").startManual();
-span.setTag("hello-to", helloTo);
+```csharp
+var span = tracer.BuildSpan("say-hello").Start();
+span.SetTag("hello-to", helloTo);
 ```
 
 #### Using Logs
 
 Our hello program is so simple that it's difficult to find a relevant example of a log, but let's try.
-Right now we're formatting the `helloStr` and then printing it. Both of these operations take certain
+Right now we're formatting the `helloString` and then printing it. Both of these operations take certain
 time, so we can log their completion:
 
-```java
-String helloStr = String.format("Hello, %s!", helloTo);
-span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
-
-System.out.println(helloStr)
-span.log(ImmutableMap.of("event", "println"));
+```csharp
+var helloString = $"Hello, {helloTo}!";
+span.Log(new Dictionary<string, object>
+    {
+        [LogFields.Event] = "string.Format",
+        ["value"] = helloString
+    }
+);
+Console.WriteLine(helloString);
+span.Log(new Dictionary<string, object>
+{
+    [LogFields.Event] = "WriteLine"
+});
 ```
 
-The log statements might look a bit strange if you have not previosuly worked with a structured logging API.
+The log statements might look a bit strange if you have not previously worked with a structured logging API.
 Rather than formatting a log message into a single string that is easy for humans to read, structured
 logging APIs encourage you to separate bits and pieces of that message into key-value pairs that can be
 automatically processed by log aggregation systems. The idea comes from the realization that today most
 logs are processed by machines rather than humans. Just [google "structured-logging"][google-logging]
 for many articles on this topic.
 
-The OpenTracing API for Java exposes structured logging API by accepting a collection of key-value pairs
-in the form of a `Map<String, ?>`. Here we are using Guava's `ImmutableMap.of()` to construct such a map,
-which takes an alternating list of `key1,value1,key2,value2` pairs.
+The OpenTracing API for C# exposes the structured logging API by accepting a dictionary
+in the form of a `Dictionary<string, object>`.
 
 The OpenTracing Specification also recommends all log statements to contain an `event` field that
 describes the overall event being logged, with other attributes of the event provided as additional fields.
@@ -246,8 +249,8 @@ you will be able to see the tags and logs.
 
 ## Conclusion
 
-The complete program can be found in the [solution](./solution) package. We moved the `initTracer`
-helper function into its own package `lib` so that we can reuse it in the other lessons as `Tracing.init()`.
+The complete program can be found in the [solution](./solution) package. We moved the `InitTracer`
+helper function into its own class `Tracing` so that we can reuse it in the other lessons as `Tracer.Init()`.
 
 Next lesson: [Context and Tracing Functions](../lesson02).
 

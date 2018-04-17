@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Jaeger.Core;
 using Jaeger.Core.Reporters;
 using Jaeger.Transport.Thrift.Transport;
@@ -8,18 +9,29 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
 {
     internal class Hello
     {
-        private readonly ITracer tracer;
+        private readonly ITracer _tracer;
 
         public Hello(OpenTracing.ITracer tracer)
         {
-            this.tracer = tracer;
+            this._tracer = tracer;
         }
 
         public void SayHello(string helloTo)
         {
-            var span = tracer.BuildSpan("say-hello").Start();
+            var span = _tracer.BuildSpan("say-hello").Start();
+            span.SetTag("hello-to", helloTo);
             var helloString = $"Hello, {helloTo}!";
+            span.Log(new Dictionary<string, object>
+                {
+                    [LogFields.Event] = "string.Format",
+                    ["value"] = helloString
+                }
+            );
             Console.WriteLine(helloString);
+            span.Log(new Dictionary<string, object>
+            {
+                [LogFields.Event] = "WriteLine"
+            });
             span.Finish();
         }
 
@@ -31,16 +43,13 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
             }
 
             var helloTo = args[0];
-            using (var tracer = Tracing.Init("say-hello"))
+            using (var tracer = InitTracer("say-hello"))
             {
                 new Hello(tracer).SayHello(helloTo);
             }
         }
-    }
 
-    public static class Tracing
-    {
-        public static Tracer Init(string serviceName)
+        private static Tracer InitTracer(string serviceName)
         {
             var loggerFactory = new LoggerFactory().AddConsole();
             var loggingReporter = new LoggingReporter(loggerFactory);
