@@ -1,34 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenTracing.Util;
+using OpenTracing.Tutorial.Library;
 
 namespace OpenTracing.Tutorial.Lesson01.Solution
 {
     internal class Hello
     {
-        private readonly ITracer tracer;
+        private readonly ITracer _tracer;
 
-        public Hello(ITracer tracer)
+        public Hello(OpenTracing.ITracer tracer)
         {
-            this.tracer = tracer;
+            this._tracer = tracer;
         }
 
-        public void SayHello(String helloTo)
+        public void SayHello(string helloTo)
         {
-            var span = tracer.BuildSpan("say-hello").Start();
+            var span = _tracer.BuildSpan("say-hello").Start();
             span.SetTag("hello-to", helloTo);
-
-            var helloStr = $"Hello, {helloTo}!";
+            var helloString = $"Hello, {helloTo}!";
+            span.Log(new Dictionary<string, object>
+                {
+                    [LogFields.Event] = "string.Format",
+                    ["value"] = helloString
+                }
+            );
+            Console.WriteLine(helloString);
             span.Log(new Dictionary<string, object>
             {
-                [LogFields.Event] = "string.Format",
-                ["value"] = helloStr
+                [LogFields.Event] = "WriteLine"
             });
-
-            Console.WriteLine(helloStr);
-            span.Log("Console.WriteLine");
-
             span.Finish();
+        }
+
+        public static void Main(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Expecting one argument");
+            }
+
+            var helloTo = args[0];
+            using (var tracer = Tracing.Init("say-hello"))
+            {
+                new Hello(tracer).SayHello(helloTo);
+            }
         }
     }
 }
