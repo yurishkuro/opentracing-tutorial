@@ -10,7 +10,7 @@ Learn how to:
 
 ## Walkthrough
 
-First, copy your work or the official solution from [Lesson 1](../lesson01) to `lesson02/exercise/Hello.java`.
+First, copy your work or the official solution from [Lesson 1](../lesson01) to `lesson02/exercise/Hello.cs`.
 
 ### Tracing individual functions
 
@@ -18,47 +18,73 @@ In [Lesson 1](../lesson01) we wrote a program that creates a trace that consists
 That single span combined two operations performed by the program, formatting the output string
 and printing it. Let's move those operations into standalone functions first:
 
-```java
-String helloStr = formatString(span, helloTo);
-printHello(span, helloStr);
+```csharp
+var helloString = FormatString(span, helloTo);
+PrintHello(span, helloString);
 ```
 
 and the functions:
 
-```java
-private String formatString(Span span, String helloTo) {
-    String helloStr = String.format("Hello, %s!", helloTo);
-    span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
-    return helloStr;
+```csharp
+private static string FormatString(ISpan span, string helloTo)
+{
+    var helloString = $"Hello, {helloTo}!";
+    span.Log(new Dictionary<string, object>
+    {
+        [LogFields.Event] = "string.Format",
+        ["value"] = helloString
+    });
+    return helloString;
 }
 
-private void printHello(Span span, String helloStr) {
-    System.out.println(helloStr);
-    span.log(ImmutableMap.of("event", "println"));
+private static void PrintHello(ISpan span, string helloString)
+{
+    Console.WriteLine(helloString);
+    span.Log(new Dictionary<string, object>
+    {
+        [LogFields.Event] = "WriteLine"
+    });
 }
 ```
 
 Of course, this does not change the outcome. What we really want to do is to wrap each function into its own span.
 
-```java
-private  String formatString(Span rootSpan, String helloTo) {
-    Span span = tracer.buildSpan("formatString").startManual();
-    try {
-        String helloStr = String.format("Hello, %s!", helloTo);
-        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
-        return helloStr;
-    } finally {
-        span.finish();
+```csharp
+using System.Reflection;
+
+private string FormatString(ISpan rootSpan, string helloTo)
+{
+    var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).Start();
+    try
+    {
+        var helloString = $"Hello, {helloTo}!";
+        span.Log(new Dictionary<string, object>
+        {
+            [LogFields.Event] = "string.Format",
+            ["value"] = helloString
+        });
+        return helloString;
+    }
+    finally
+    {
+        span.Finish();
     }
 }
 
-private void printHello(Span rootSpan, String helloStr) {
-    Span span = tracer.buildSpan("printHello").startManual();
-    try {
-        System.out.println(helloStr);
-        span.log(ImmutableMap.of("event", "println"));
-    } finally {
-        span.finish();
+private void PrintHello(ISpan rootSpan, string helloString)
+{
+    var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).Start();
+    try
+    {
+        Console.WriteLine(helloString);
+        span.Log(new Dictionary<string, object>
+        {
+            [LogFields.Event] = "WriteLine"
+        });
+    }
+    finally
+    {
+        span.Finish();
     }
 }
 ```
@@ -66,22 +92,60 @@ private void printHello(Span rootSpan, String helloStr) {
 Let's run it:
 
 ```
-$ ./run.sh lesson02.exercise.Hello Bryan
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 12c92a6604499c25:12c92a6604499c25:0:1 - formatString
+$ dotnet run Bryan
+
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 4353438848052479496,
+            "Low": 8059970555673150305,
+            "IsValid": true
+          },
+          ...
+        },
+        "References": [],
+        ...
+      }
 Hello, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 14aaaf7a377e5147:14aaaf7a377e5147:0:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: a25cf88369793b9b:a25cf88369793b9b:0:1 - say-hello
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 2134861473790156628,
+            "Low": 4422115797691393275,
+            "IsValid": true
+          },
+          ...
+        },
+        "References": [],
+        ...
+      }
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 12550591731891114008,
+            "Low": 14472260298413271319,
+            "IsValid": true
+          },
+          ...
+        },
+        "References": [],
+        ...
+      }
 ```
 
-We got three spans, but there is a problem here. The first hexadecimal segment of the output represents
-Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent
-a standalone trace with a single span. That's not what we wanted!
+We got three spans, but there is a problem here. the output for each span shows the Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single span. That's not what we wanted!
 
 What we really wanted was to establish causal relationship between the two new spans to the root
-span started in `main()`. We can do that by passing an additional option `asChildOf` to the span builder:
+span started in `Main()`. We can do that by passing an additional option `AsChildOf` to the span builder:
 
-```java
-Span span = tracer.buildSpan("formatString").asChildOf(rootSpan).startManual();
+```csharp
+var span = _tracer.buildSpan(MethodBase.GetCurrentMethod().Name).AsChildOf(rootSpan).startManual();
 ```
 
 If we think of the trace as a directed acyclic graph where nodes are the spans and edges are
@@ -95,24 +159,85 @@ complete its operation. Another standard reference type in OpenTracing is `Follo
 means the `rootSpan` is the ancestor in the DAG, but it does not depend on the completion of the
 child span, for example if the child represents a best-effort, fire-and-forget cache write.
 
-If we modify the `printHello` function accordingly and run the app, we'll see that all reported
+If we modify the `PrintHello` function and `FormatString` function accordingly and run the app, we'll see that all reported
 spans now belong to the same trace:
 
 ```
-$ ./run.sh lesson02.exercise.Hello Bryan
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:42d38965612a195a:4ca67017b68d14c:1 - formatString
+$ dotnet run Bryan
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 10551131348252046144,
+            "Low": 4395131861836039341,
+            "IsValid": true
+          },
+          ...
+        },
+        "References": [
+          {
+            "Type": "child_of",
+            "Context": {
+              "TraceId": {
+                "High": 10551131348252046144,
+                "Low": 4395131861836039341,
+                "IsValid": true
+              },
+              ...
+            }
+          }
+        ],
+        ...
+      }
 Hello, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:19af156b64c22d23:4ca67017b68d14c:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:4ca67017b68d14c:0:1 - say-hello
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 10551131348252046144,
+            "Low": 4395131861836039341,
+            "IsValid": true
+          },
+          ...
+        },
+        "References": [
+          {
+            "Type": "child_of",
+            "Context": {
+              "TraceId": {
+                "High": 10551131348252046144,
+                "Low": 4395131861836039341,
+                "IsValid": true
+              },
+              ...
+            }
+          }
+        ],
+        ...
+      }
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 10551131348252046144,
+            "Low": 4395131861836039341,
+            "IsValid": true
+          },
+          ...
+        },
+        "References": [],
+        ...
+      }
 ```
 
-We can also see that instead of `0` in the 3rd position the first two reported spans display
-`4ca67017b68d14c`, which is the ID of the root span. The root span is reported last because
-it is the last one to finish.
+We can also see for the first two reported spans the `References` array contains references of type `child_of` with the ID of the root span. The root span is reported last because it is the last one to finish.
 
 If we find this trace in the UI, it will show a proper parent-child relationship between the spans.
 
-The complete version of this program can be found in [./solution/HelloManual.java](./solution/HelloManual.java).
+The complete version of this program can be found in [./solution/HelloManual.cs](./solution/HelloManual.cs).
 
 ### Propagate the in-process context
 
@@ -123,43 +248,55 @@ You may have noticed a few unpleasant side effects of our recent changes
 OpenTracing API for Java provides a better way. Using thread-locals and the notion of an "active span",
 we can avoid passing the span through our code and just access it via `tracer.
 
-```java
-private void sayHello(String helloTo) {
-    try (Scope scope = tracer.buildSpan("say-hello").startActive(true)) {
-        scope.span().setTag("hello-to", helloTo);
-        
-        String helloStr = formatString(helloTo);
-        printHello(helloStr);
+```csharp
+private string FormatString(string helloTo)
+{
+    using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+    {
+        var helloString = $"Hello, {helloTo}!";
+        scope.Span.Log(new Dictionary<string, object>
+        {
+            [LogFields.Event] = "string.Format",
+            ["value"] = helloString
+        });
+        return helloString;
     }
 }
 
-private  String formatString(String helloTo) {
-    try (Scope scope = tracer.buildSpan("formatString").startActive()) {
-        String helloStr = String.format("Hello, %s!", helloTo);
-        scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
-        return helloStr;
+private void PrintHello(string helloString)
+{
+    using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+    {
+        Console.WriteLine(helloString);
+        scope.Span.Log(new Dictionary<string, object>
+        {
+            [LogFields.Event] = "WriteLine"
+        });
     }
 }
 
-private void printHello(String helloStr) {
-    try (Scope scope = tracer.buildSpan("printHello").startActive()) {
-        System.out.println(helloStr);
-        scope.span().log(ImmutableMap.of("event", "println"));
+public void SayHello(string helloTo)
+{
+    using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+    {
+        scope.Span.SetTag("hello-to", helloTo);
+        var helloString = FormatString(helloTo);
+        PrintHello(helloString);
     }
 }
 ```
 
 In the above code we're making the following changes:
-  * We use `startActive()` method of the span builder instead of `startManual()`,
+  * We use `StartActive()` method of the span builder instead of `Start()`,
     which makes the span "active" by storing it in a thread-local storage.
-  * `startActive()` returns a `Scope` object instead of a `Span`. Scope is a container of the currently
-    active span. We access the active span via `scope.span()`. Once the scope is closed, the previous
+  * `StartActive()` returns a `Scope` object instead of a `Span`. Scope is a container of the currently
+    active span. We access the active span via `scope.Span`. Once the scope is closed, the previous
     scope becomes current, thus re-activating previously active span in the current thread.
   * `Scope` is auto-closable, which allows us to use try-with-resource syntax.
-  * The boolean parameter in `startActive(true)` tells the Scope that once it is closed it should
+  * The boolean parameter in `StartActive(true)` tells the Scope that once it is closed it should
     finish the span it represents.
-  * `startActive()` automatically creates a `ChildOf` reference to the previously active span, so that
-    we don't have to use `asChildOf()` builder method explicitly.
+  * `StartActive()` automatically creates a `ChildOf` reference to the previously active span, so that
+    we don't have to use `AsChildOf()` builder method explicitly.
 
 If we run this program, we will see that all three reported spans have the same trace ID.
 

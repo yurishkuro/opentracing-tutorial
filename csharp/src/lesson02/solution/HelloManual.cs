@@ -1,59 +1,76 @@
 ﻿using System;
 using System.Collections.Generic;
+using OpenTracing.Tutorial.Library;
+using System.Reflection;
 
-namespace OpenTracing.Tutorial.Lesson02.Solution
+namespace OpenTracing.Tutorial.Lesson02.Exercise
 {
     internal class HelloManual
     {
-        private readonly ITracer tracer;
+        private readonly ITracer _tracer;
 
         public HelloManual(ITracer tracer)
         {
-            this.tracer = tracer;
-        }
-
-        public void SayHello(String helloTo)
-        {
-            var span = tracer.BuildSpan("say-hello").Start();
-            span.SetTag("hello-to", helloTo);
-
-            var helloStr = FormatString(span, helloTo);
-            PrintHello(span, helloStr);
-
-            span.Finish();
+            _tracer = tracer;
         }
 
         private string FormatString(ISpan rootSpan, string helloTo)
         {
-            var span = tracer.BuildSpan("FormatString").AsChildOf(rootSpan).Start();
+            var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).AsChildOf(rootSpan).Start();
             try
             {
-                var helloStr = $"Hello, {helloTo}!";
+                var helloString = $"Hello, {helloTo}!";
                 span.Log(new Dictionary<string, object>
                 {
                     [LogFields.Event] = "string.Format",
-                    ["value"] = helloStr
+                    ["value"] = helloString
                 });
-                return helloStr;
-            }
-            finally 
-            {
-                span.Finish();
-            }
-        }
-
-        private void PrintHello(ISpan rootSpan, string helloStr)
-        {
-            var span = tracer.BuildSpan("PrintHello").AsChildOf(rootSpan).Start();
-            try
-            {
-                Console.WriteLine(helloStr);
-                span.Log("Console.WriteLine");
+                return helloString;
             }
             finally
             {
                 span.Finish();
             }
         }
+
+        private void PrintHello(ISpan rootSpan, string helloString)
+        {
+            var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).AsChildOf(rootSpan).Start();
+            try
+            {
+                Console.WriteLine(helloString);
+                span.Log(new Dictionary<string, object>
+                {
+                    [LogFields.Event] = "WriteLine"
+                });
+            }
+            finally
+            {
+                span.Finish();
+            }
+        }
+
+        public void SayHello(string helloTo)
+        {
+            var span = _tracer.BuildSpan("say-hello").Start();
+            span.SetTag("hello-to", helloTo);
+            var helloString = FormatString(span, helloTo);
+            PrintHello(span, helloString);
+            span.Finish();
+        }
+
+        //public static void Main(string[] args)
+        //{
+        //    if (args.Length != 1)
+        //    {
+        //        throw new ArgumentException("Expecting one argument");
+        //    }
+
+        //    var helloTo = args[0];
+        //    using (var tracer = Tracing.Init("say-hello"))
+        //    {
+        //        new HelloManual(tracer).SayHello(helloTo);
+        //    }
+        //}
     }
 }
