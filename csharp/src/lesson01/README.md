@@ -63,16 +63,16 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
 {
     internal class Hello
     {
-        private readonly ITracer tracer;
+        private readonly ITracer _tracer;
 
         public Hello(OpenTracing.ITracer tracer)
         {
-            this.tracer = tracer;
+            this._tracer = tracer;
         }
 
         public void SayHello(string helloTo)
         {
-            var span = tracer.BuildSpan("say-hello").Start();
+            var span = _tracer.BuildSpan("say-hello").Start();
             var helloString = $"Hello, {helloTo}!";
             Console.WriteLine(helloString);
             span.Finish();
