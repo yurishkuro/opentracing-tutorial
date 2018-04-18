@@ -22,7 +22,7 @@ namespace Lesson03.Exercise.Controllers
         [HttpGet("{helloString}", Name = "GetFormat")]
         public string Get(string helloString)
         {
-            var formattedHelloString = $"Hello {helloString}!";
+            var formattedHelloString = $"Hello, {helloString}!";
             return formattedHelloString;
         }
     }

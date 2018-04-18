@@ -1,4 +1,4 @@
-# Lesson 3 - Tracing RPC Requests
+# Lesson 3 - Tracing HTTP Requests
 
 ## Objectives
 
@@ -13,51 +13,85 @@ Learn how to:
 ### Hello-World Microservice App
 
 To save you some typing, we are going to start this lesson with a partial solution
-available in the [exercise](./exercise) package. We are still working with the same
-Hello World application, except that the `formatString` and `printHello` functions
-are now rewritten as RPC calls to two downstream services, `formatter` and `publisher`.
+available in the [exercise](./exercise) package. We are using the same
+Hello World application as base embedded in a REST API project. The `formatString` and `printHello` functions
+are now rewritten as REST API calls to the endpoints `format` and `publish`.
 The package is organized as follows:
 
-  * `Hello.java` is a copy from Lesson 2 modified to make HTTP calls
-  * `Formatter.java` is a Dropwizard-based HTTP server that responds to a request like
-    `GET 'http://localhost:8081/format?helloTo=Bryan'` and returns `"Hello, Bryan!"` string
-  * `Publisher.java` is another HTTP server that responds to requests like
-     `GET 'http://localhost:8082/publish?helloStr=hi%20there'` and prints `"hi there"` string to stdout.
+  * `Hello.cs` is a copy from Lesson 2 modified to make HTTP calls.
+  * `FormatController.cs` is the controller that responds to requests like
+    `GET 'http://localhost:56870/api/format/Bryan'` and returns the string `"Hello, Bryan!"`.
+  * `PublishController.cs` is the controller that responds to requests like
+     `GET 'http://localhost:56870/api/publish/hi%20there'` and prints `"hi there"` string to stdout,
+    returning the string `published`.
 
-To test it out, run the formatter and publisher services in separate terminals
-
-```
-$ ./run.sh lesson03.exercise.Formatter server
-$ ./run.sh lesson03.exercise.Publisher server
-```
+To test it out, run the project in Visual Studio and observe the output from the ASP.NET Core Web Server.
 
 Execute an HTTP request against the formatter:
 
 ```
-$ curl 'http://localhost:8081/format?helloTo=Bryan'
-Hello, Bryan!%
+$ curl 'http://localhost:56870/api/format/Bryan'
+Hello, Bryan!
 ```
 
 Execute and HTTP request against the publisher:
 
 ```
-$ curl 'http://localhost:8082/publish?helloStr=hi%20there'
+$ curl 'http://localhost:56870/api/publish/hello'
 published
 ```
 
-The publisher stdout will show `"hi there"`.
+The publisher stdout will show `"hello"`.
 
-Finally, if we run the client app as we did in the previous lessons:
+Finally, if access the endpoint initiating the call to our code as we did in the previous lessons
+we see the same three spans in the output as before:
 
 ```
-$ ./run.sh lesson03.exercise.Hello Bryan
-2017/09/24 21:43:33 Initializing logging reporter
-2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:5d10cdd1a9cf004a:7af6719d92c3df6d:1
-2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:538a7bfd34893922:7af6719d92c3df6d:1
-2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:7af6719d92c3df6d:0:1
+$ curl 'http://localhost:56870/api/hello/Bryan'
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 6165735122331609763,
+            "Low": 5774498728660989581,
+            "IsValid": true
+          },
+          ...
+        },
+        ...
+      }
+Hello Bryan!
+published
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 6165735122331609763,
+            "Low": 5774498728660989581,
+            "IsValid": true
+          },
+          },
+          ...
+        },
+        ...
+      }
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 6165735122331609763,
+            "Low": 5774498728660989581,
+            "IsValid": true
+          },
+          },
+          ...
+        },
+        ...
+      }
 ```
-
-We will see the `publisher` printing the line `"Hello, Bryan!"`.
 
 ### Inter-Process Context Propagation
 
