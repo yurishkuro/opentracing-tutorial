@@ -1,16 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OpenTracing.Util;
+using OpenTracing;
+using OpenTracing.Tutorial.Library;
 
 namespace Lesson03.Exercise.Controllers
 {
     [Route("api/publish")]
     public class PublishController : Controller
     {
+        private readonly ITracer _tracer;
+
+        public PublishController(ITracer tracer)
+        {
+            _tracer = tracer;
+        }
+
         // GET: api/publish
         [HttpGet]
         public string Get()
@@ -22,8 +27,16 @@ namespace Lesson03.Exercise.Controllers
         [HttpGet("{helloString}", Name = "GetPublish")]
         public string Get(string helloString)
         {
-            Console.WriteLine(helloString);
-            return "published";
+            var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
+            using (var scope = Tracing.StartServerSpan(_tracer, headers, "PublishController"))
+            {
+                scope.Span.Log(new Dictionary<string, object>
+                {
+                    [LogFields.Event] = "WriteLine",
+                    ["value"] = helloString
+                });
+                return "published";
+            }
         }
     }
 }

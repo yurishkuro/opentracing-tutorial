@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Web;
 using System.Net;
-using System.Net.Http;
-using OpenTracing.Tutorial.Library;
 using System.Reflection;
-using Microsoft.AspNetCore.Http;
 using OpenTracing;
+using OpenTracing.Propagation;
+using OpenTracing.Tag;
 
 namespace Lesson03.Exercise
 {
@@ -25,6 +23,18 @@ namespace Lesson03.Exercise
             using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
             {
                 var url = $"http://localhost:56870/api/format/{helloTo}";
+                var span = _tracer.ActiveSpan;
+                Tags.SpanKind.Set(span, Tags.SpanKindClient);
+                Tags.HttpMethod.Set(span, "GET");
+                Tags.HttpUrl.Set(span, url.ToString());
+
+                // TODO: Refactor into own helper method
+                // Inject into header of httpClient:
+                var dictionary = new Dictionary<string, string>();
+                _tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new TextMapInjectAdapter(dictionary));
+                foreach (var entry in dictionary)
+                    webClient.Headers.Add(entry.Key, entry.Value);
+
                 var helloString = webClient.DownloadString(url);
                 scope.Span.Log(new Dictionary<string, object>
                 {

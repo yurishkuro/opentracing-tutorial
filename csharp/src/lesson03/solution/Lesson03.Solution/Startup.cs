@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Jaeger.Core;
+﻿using Jaeger.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OpenTracing.Util;
 using OpenTracing.Tutorial.Library;
 
@@ -34,6 +28,9 @@ namespace Lesson03.Exercise
             {
                 builder.AddConfiguration(Configuration.GetSection("Logging"));
             });
+
+            GlobalTracer.Register(Tracer);
+            services.AddOpenTracing();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,6 +40,8 @@ namespace Lesson03.Exercise
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            applicationLifetime.ApplicationStopping.Register(Tracer.Dispose);
 
             app.UseMvc();
         }
