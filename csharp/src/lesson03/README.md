@@ -95,10 +95,10 @@ info: Jaeger.Core.Reporters.LoggingReporter[0]
 
 ### Inter-Process Context Propagation
 
-Since the only change we made in the `Hello.java` app was to replace two operations with HTTP calls,
+Since the only change we made in the `Hello.cs` app was to replace two operations with HTTP calls,
 the tracing story remains the same - we get a trace with three spans, all from `hello-world` service.
 But now we have two more microservices participating in the transaction and we want to see them
-in the trace as well. In order to continue the trace over the process boundaries and RPC calls,
+in the trace as well. In order to continue the trace over the process boundaries and HTTP calls,
 we need a way to propagate the span context over the wire. The OpenTracing API provides two functions
 in the Tracer interface to do that, `inject(spanContext, format, carrier)` and `extract(format, carrier)`.
 
