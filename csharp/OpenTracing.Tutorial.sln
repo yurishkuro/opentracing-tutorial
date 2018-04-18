@@ -28,6 +28,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lesson02.Exercise", "src\lesson02\exercise\Lesson02.Exercise.csproj", "{0AC7CEBE-CFA3-4C86-AC9A-3878A2E11A44}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lesson03.Exercise", "src\lesson03\exercise\Lesson03.Exercise\Lesson03.Exercise.csproj", "{F6F04D85-1686-44B1-82F9-D6A5AEF1943C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7B169D9C-5B7E-4322-9C6B-2396995C83EC} = {7B169D9C-5B7E-4322-9C6B-2396995C83EC}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
