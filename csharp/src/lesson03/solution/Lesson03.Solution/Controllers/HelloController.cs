@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OpenTracing.Tutorial.Library;
+using System.Threading.Tasks;
 
 namespace Lesson03.Exercise.Controllers
 {
@@ -15,11 +16,11 @@ namespace Lesson03.Exercise.Controllers
 
         // GET: api/hello/helloString
         [HttpGet("{helloString}", Name = "GetHello")]
-        public string Get(string helloString)
+        public async Task<string> Get(string helloString)
         {
             using (var tracer = Tracing.Init("hello-world"))
             {
-                new Hello(tracer).SayHello(helloString);
+                await new Hello(tracer).SayHello(helloString);
             }
             return helloString;
         }
