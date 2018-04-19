@@ -12,7 +12,7 @@ Learn how to:
 
 ### A simple Hello-World program
 
-Let's create a simple Java program `lesson01/exercise/Hello.java` that takes an argument and prints `"Hello, {arg}!"`.
+Let's create a simple Java program `exercise/Hello.java` that takes an argument and prints `"Hello, {arg}!"`.
 
 ```java
 package lesson01.exercise;
@@ -30,7 +30,6 @@ public class Hello {
         }
         String helloTo = args[0];
         new Hello().sayHello(helloTo);
-        tracer.close();
     }
 }
 ```
@@ -41,8 +40,8 @@ $ ./run.sh lesson01.exercise.Hello Bryan
 Hello, Bryan!
 ```
 
-Here we're using a simple helper script `run.sh` that executes a class via Maven,
-as well as strips out some of it diagnostic logging.
+Here we're using a simple helper script `run.sh` that executes a class. It might take a while for the first run to
+complete.
 
 ### Create a trace
 

@@ -10,7 +10,7 @@ Learn how to:
 
 ## Walkthrough
 
-First, copy your work or the official solution from [Lesson 1](../lesson01) to `lesson02/exercise/Hello.java`.
+First, copy your work or the official solution from [Lesson 1](../lesson01) to `exercise/Hello.java`.
 
 ### Tracing individual functions
 
