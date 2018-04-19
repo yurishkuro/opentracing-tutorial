@@ -12,6 +12,125 @@ Learn how to:
 
 ### Hello-World Microservice App
 
+For this lesson we are going to need a client and server component. To get started, please create
+a command line project, similar to the previous lessons. Additionally, create a "ASP .NET Core Web Application"
+with the "API" template. Make sure to add the reference to our `OpenTracing.Tutorial.Library` library and
+copy the `HelloActive.cs` file from the previous lesson into the client solution replacing the automatically
+created `Program.cs`. Make some slight changes to have the App call the API instead of doing the string formatting
+work locally:
+
+```
+using System.Net;
+
+namespace Lesson03.Exercise.Client
+{
+    internal class Hello
+    {
+        private readonly ITracer _tracer;
+        private readonly WebClient webClient = new WebClient();
+
+        private string FormatString(string helloTo)
+        {
+            using (var scope = _tracer.BuildSpan("FormatString").StartActive(true))
+            {
+                var url = $"http://localhost:56870/api/format/{helloTo}";
+                var helloString = _webClient.DownloadString(url);
+                scope.Span.Log(new Dictionary<string, object>
+                {
+                    [LogFields.Event] = "string.Format",
+                    ["value"] = helloString
+                });
+                return helloString;
+            }
+        }
+    ...
+    }
+}
+```
+
+
+For the server REST API part, let's reproduce the functionality of `FormatString`:
+
+```
+using Microsoft.AspNetCore.Mvc;
+
+namespace Lesson03.Exercise.Server.Controllers
+{
+    [Route("api/Format")]
+    public class FormatController : Controller
+    {
+        // GET: api/Format
+        [HttpGet]
+        public string Get()
+        {
+            return "Hello!";
+        }
+
+        // GET: api/Format/helloString
+        [HttpGet("{helloString}", Name = "GetFormat")]
+        public string Get(string helloString)
+        {
+            var formattedHelloString = $"Hello, {helloString}!";
+            return formattedHelloString;
+        }
+    }
+}```
+
+Start the server app and access the endpoint directly:
+
+```
+$ curl http://localhost:56870/api/format/Bryan
+Hello, Bryan!
+```
+
+Executing the client still produces the same result as in the previous lesson, meaning we
+have no traces for the server side:
+
+```
+$ dotnet run Bryan
+
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 17540310261729770759,
+            "Low": 5413788135056085337,
+            "IsValid": true
+          },
+          ...
+        },
+        ...
+      }
+Hello, Bryan!
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 17540310261729770759,
+            "Low": 5413788135056085337,
+            "IsValid": true
+          },
+          ...
+        },
+        ...
+      }
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+      Reporting span:
+ {
+        "Context": {
+          "TraceId": {
+            "High": 17540310261729770759,
+            "Low": 5413788135056085337,
+            "IsValid": true
+          },
+          ...
+        },
+        ...
+      }
+```
+
 To save you some typing, we are going to start this lesson with a partial solution
 available in the [exercise](./exercise) package. We are using the same
 Hello World application as base embedded in a REST API project. The `formatString` and `printHello` functions
