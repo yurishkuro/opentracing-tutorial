@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Net;
 using OpenTracing.Tutorial.Library;
 using OpenTracing;
+using OpenTracing.Propagation;
+using OpenTracing.Tag;
 
 namespace Lesson03.Exercise.Client
 {
@@ -21,6 +23,15 @@ namespace Lesson03.Exercise.Client
             using (var scope = _tracer.BuildSpan("FormatString").StartActive(true))
             {
                 var url = $"http://localhost:56870/api/format/{helloTo}";
+                var span = _tracer.ActiveSpan;
+                Tags.SpanKind.Set(span, Tags.SpanKindClient);
+                Tags.HttpMethod.Set(span, "GET");
+                Tags.HttpUrl.Set(span, url);
+                var dictionary = new Dictionary<string, string>();
+                _tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new TextMapInjectAdapter(dictionary));
+                foreach (var entry in dictionary)
+                    _webClient.Headers.Add(entry.Key, entry.Value);
+                
                 var helloString = _webClient.DownloadString(url);
                 scope.Span.Log(new Dictionary<string, object>
                 {
