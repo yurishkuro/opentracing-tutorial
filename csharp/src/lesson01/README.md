@@ -42,7 +42,7 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
 ```
 
 Run it:
-```
+```powershell
 $ dotnet run Bryan
 Hello, Bryan!
 ```
@@ -142,33 +142,33 @@ the tracer as originating from a `say-world` service.
 
 If we run the program now, we should see a span logged:
 
-```
+```powershell
 $ dotnet run Bryan
 Hello, Bryan!
 info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
+Reporting span:
+{
+    "Context": {
+        "TraceId": {
             "High": 11193910068750926516,
             "Low": 1595153065594434051,
             "IsValid": true
-          },
-          "SpanId": {},
-          "ParentId": {},
-          "Flags": 1,
-          "IsSampled": true
         },
-        "FinishTimestampUtc": "2018-04-16T13:29:17.7489041Z"
-        "Logs": [],
-        "OperationName": "say-hello",
-        "References": [],
-        "StartTimestampUtc": "2018-04-16T13:29:17.7458831Z",
-        "Tags": {
-          "sampler.type": "const",
-          "sampler.param": true
-        }
- }
+        "SpanId": {},
+        "ParentId": {},
+        "Flags": 1,
+        "IsSampled": true
+    },
+    "FinishTimestampUtc": "2018-04-16T13:29:17.7489041Z"
+    "Logs": [],
+    "OperationName": "say-hello",
+    "References": [],
+    "StartTimestampUtc": "2018-04-16T13:29:17.7458831Z",
+    "Tags": {
+        "sampler.type": "const",
+        "sampler.param": true
+    }
+}
 ```
 
 If you have the Jaeger backend running, you should be able to see the trace in the UI.

@@ -54,7 +54,7 @@ using System.Reflection;
 
 private string FormatString(ISpan rootSpan, string helloTo)
 {
-    var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).Start();
+    var span = _tracer.BuildSpan("FormatString").Start();
     try
     {
         var helloString = $"Hello, {helloTo}!";
@@ -73,7 +73,7 @@ private string FormatString(ISpan rootSpan, string helloTo)
 
 private void PrintHello(ISpan rootSpan, string helloString)
 {
-    var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).Start();
+    var span = _tracer.BuildSpan("PrintHello").Start();
     try
     {
         Console.WriteLine(helloString);
@@ -91,52 +91,40 @@ private void PrintHello(ISpan rootSpan, string helloString)
 
 Let's run it:
 
-```
+```powershell
 $ dotnet run Bryan
 
 info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 4353438848052479496,
-            "Low": 8059970555673150305,
-            "IsValid": true
-          },
-          ...
-        },
-        "References": [],
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 4353438848052479496, "Low": 8059970555673150305 },
         ...
-      }
+    },
+    "References": [],
+    ...
+}
 Hello, Bryan!
 info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 2134861473790156628,
-            "Low": 4422115797691393275,
-            "IsValid": true
-          },
-          ...
-        },
-        "References": [],
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 2134861473790156628, "Low": 4422115797691393275 },
         ...
-      }
+    },
+    "References": [],
+    ...
+}
 info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 12550591731891114008,
-            "Low": 14472260298413271319,
-            "IsValid": true
-          },
-          ...
-        },
-        "References": [],
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 12550591731891114008, "Low": 14472260298413271319 },
         ...
-      }
+    },
+    "References": [],
+    ...
+}
 ```
 
 We got three spans, but there is a problem here. the output for each span shows the Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single span. That's not what we wanted!
@@ -145,7 +133,7 @@ What we really wanted was to establish causal relationship between the two new s
 span started in `Main()`. We can do that by passing an additional option `AsChildOf` to the span builder:
 
 ```csharp
-var span = _tracer.buildSpan(MethodBase.GetCurrentMethod().Name).AsChildOf(rootSpan).startManual();
+var span = _tracer.buildSpan("FormatString").AsChildOf(rootSpan).startManual();
 ```
 
 If we think of the trace as a directed acyclic graph where nodes are the spans and edges are
@@ -162,75 +150,55 @@ child span, for example if the child represents a best-effort, fire-and-forget c
 If we modify the `PrintHello` function and `FormatString` function accordingly and run the app, we'll see that all reported
 spans now belong to the same trace:
 
-```
+```powershell
 $ dotnet run Bryan
 info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 10551131348252046144,
-            "Low": 4395131861836039341,
-            "IsValid": true
-          },
-          ...
-        },
-        "References": [
-          {
-            "Type": "child_of",
-            "Context": {
-              "TraceId": {
-                "High": 10551131348252046144,
-                "Low": 4395131861836039341,
-                "IsValid": true
-              },
-              ...
-            }
-          }
-        ],
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
         ...
-      }
+    },
+    "References": [
+        {
+        "Type": "child_of",
+        "Context": {
+            "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
+            ...
+            }
+        }
+    ],
+    ...
+}
 Hello, Bryan!
 info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
+        ...
+    },
+    "References": [
+        {
+        "Type": "child_of",
         "Context": {
-          "TraceId": {
-            "High": 10551131348252046144,
-            "Low": 4395131861836039341,
-            "IsValid": true
-          },
-          ...
-        },
-        "References": [
-          {
-            "Type": "child_of",
-            "Context": {
-              "TraceId": {
-                "High": 10551131348252046144,
-                "Low": 4395131861836039341,
-                "IsValid": true
-              },
-              ...
+            "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
+            ...
             }
-          }
-        ],
-        ...
-      }
+        }
+    ],
+    ...
+}
 info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 10551131348252046144,
-            "Low": 4395131861836039341,
-            "IsValid": true
-          },
-          ...
-        },
-        "References": [],
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
         ...
-      }
+    },
+    "References": [],
+    ...
+}
 ```
 
 We can also see for the first two reported spans the `References` array contains references of type `child_of` with the ID of the root span. The root span is reported last because it is the last one to finish.
@@ -245,13 +213,13 @@ You may have noticed a few unpleasant side effects of our recent changes
   * we had to pass the Span object as the first argument to each function
   * we also had to write somewhat verbose try/finally code to finish the spans
 
-OpenTracing API for Java provides a better way. Using thread-locals and the notion of an "active span",
-we can avoid passing the span through our code and just access it via `tracer.
+OpenTracing API for C# provides a better way. Using thread-locals and the notion of an "active span",
+we can avoid passing the span through our code and just access it via `_tracer`.
 
 ```csharp
 private string FormatString(string helloTo)
 {
-    using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+    using (var scope = _tracer.BuildSpan("FormatString").StartActive(true))
     {
         var helloString = $"Hello, {helloTo}!";
         scope.Span.Log(new Dictionary<string, object>
@@ -265,7 +233,7 @@ private string FormatString(string helloTo)
 
 private void PrintHello(string helloString)
 {
-    using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+    using (var scope = _tracer.BuildSpan("PrintHello").StartActive(true))
     {
         Console.WriteLine(helloString);
         scope.Span.Log(new Dictionary<string, object>
@@ -277,7 +245,7 @@ private void PrintHello(string helloString)
 
 public void SayHello(string helloTo)
 {
-    using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+    using (var scope = _tracer.BuildSpan("SayHello").StartActive(true))
     {
         scope.Span.SetTag("hello-to", helloTo);
         var helloString = FormatString(helloTo);
