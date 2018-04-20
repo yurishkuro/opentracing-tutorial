@@ -19,7 +19,7 @@ copy the `HelloActive.cs` file from the previous lesson into the client solution
 created `Program.cs`. Make some slight changes to have the App call the API instead of doing the string formatting
 work locally:
 
-```
+```csharp
 using System.Net;
 
 namespace Lesson03.Exercise.Client
@@ -48,10 +48,9 @@ namespace Lesson03.Exercise.Client
 }
 ```
 
-
 For the server REST API part, let's reproduce the functionality of `FormatString`:
 
-```
+```csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lesson03.Exercise.Server.Controllers
@@ -74,143 +73,19 @@ namespace Lesson03.Exercise.Server.Controllers
             return formattedHelloString;
         }
     }
-}```
+}
+```
 
 Start the server app and access the endpoint directly:
 
-```
+```powershell
 $ curl http://localhost:56870/api/format/Bryan
-Hello, Bryan!
 ```
 
-Executing the client still produces the same result as in the previous lesson, meaning we
+Executing the client still produces the same threes spans as in the previous lesson, meaning we
 have no traces for the server side:
 
-```
-$ dotnet run Bryan
-
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 17540310261729770759,
-            "Low": 5413788135056085337,
-            "IsValid": true
-          },
-          ...
-        },
-        ...
-      }
-Hello, Bryan!
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 17540310261729770759,
-            "Low": 5413788135056085337,
-            "IsValid": true
-          },
-          ...
-        },
-        ...
-      }
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 17540310261729770759,
-            "Low": 5413788135056085337,
-            "IsValid": true
-          },
-          ...
-        },
-        ...
-      }
-```
-
-To save you some typing, we are going to start this lesson with a partial solution
-available in the [exercise](./exercise) package. We are using the same
-Hello World application as base embedded in a REST API project. The `formatString` and `printHello` functions
-are now rewritten as REST API calls to the endpoints `format` and `publish`.
-The package is organized as follows:
-
-  * `Hello.cs` is a copy from Lesson 2 modified to make HTTP calls.
-  * `FormatController.cs` is the controller that responds to requests like
-    `GET 'http://localhost:56870/api/format/Bryan'` and returns the string `"Hello, Bryan!"`.
-  * `PublishController.cs` is the controller that responds to requests like
-     `GET 'http://localhost:56870/api/publish/hi%20there'` and prints `"hi there"` string to stdout,
-    returning the string `published`.
-
-To test it out, run the project in Visual Studio and observe the output from the ASP.NET Core Web Server.
-
-Execute an HTTP request against the formatter:
-
-```
-$ curl 'http://localhost:56870/api/format/Bryan'
-Hello, Bryan!
-```
-
-Execute and HTTP request against the publisher:
-
-```
-$ curl 'http://localhost:56870/api/publish/hello'
-published
-```
-
-The publisher stdout will show `"hello"`.
-
-Finally, if access the endpoint initiating the call to our code as we did in the previous lessons
-we see the same three spans in the output as before:
-
-```
-$ curl 'http://localhost:56870/api/hello/Bryan'
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 6165735122331609763,
-            "Low": 5774498728660989581,
-            "IsValid": true
-          },
-          ...
-        },
-        ...
-      }
-Hello Bryan!
-published
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 6165735122331609763,
-            "Low": 5774498728660989581,
-            "IsValid": true
-          },
-          },
-          ...
-        },
-        ...
-      }
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-      Reporting span:
- {
-        "Context": {
-          "TraceId": {
-            "High": 6165735122331609763,
-            "Low": 5774498728660989581,
-            "IsValid": true
-          },
-          },
-          ...
-        },
-        ...
-      }
-```
+![Trace](trace-client.png)
 
 ### Inter-Process Context Propagation
 
@@ -219,7 +94,7 @@ the tracing story remains the same - we get a trace with three spans, all from `
 But now we have two more microservices participating in the transaction and we want to see them
 in the trace as well. In order to continue the trace over the process boundaries and HTTP calls,
 we need a way to propagate the span context over the wire. The OpenTracing API provides two functions
-in the Tracer interface to do that, `inject(spanContext, format, carrier)` and `extract(format, carrier)`.
+in the Tracer interface to do that, `Inject(spanContext, format, carrier)` and `Extract(format, carrier)`.
 
 The `format` parameter refers to one of the three standard encodings the OpenTracing API defines:
   * `TEXT_MAP` where span context is encoded as a collection of string key-value pairs,
@@ -230,41 +105,23 @@ The `carrier` is an abstraction over the underlying RPC framework. For example, 
 format is an interface that allows the tracer to write key-value pairs via `put(key, value)` method,
 while a carrier for Binary format is simply a `ByteBuffer`.
 
-The tracing instrumentation uses `inject` and `extract` to pass the span context through the RPC calls.
+The tracing instrumentation uses `Inject` and `Extract` to pass the span context through the network calls.
 
 ### Instrumenting the Client
 
-In the `formatString` function we already create a child span. In order to pass its context over the HTTP
-request we need to call `tracer.inject` before building the HTTP request:
+In the `FormatString` function we already create a child span. In order to pass its context over the HTTP
+request we need to call `_tracer.Inject` before building the HTTP request:
 
-```java
-Tags.SPAN_KIND.set(tracer.activeSpan(), Tags.SPAN_KIND_CLIENT);
-Tags.HTTP_METHOD.set(tracer.activeSpan(), "GET");
-Tags.HTTP_URL.set(tracer.activeSpan(), url.toString());
-tracer.inject(tracer.activeSpan().context(), Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
-```
+```csharp
+var span = _tracer.ActiveSpan;
+Tags.SpanKind.Set(span, Tags.SpanKindClient);
+Tags.HttpMethod.Set(span, "GET");
+Tags.HttpUrl.Set(span, url);
 
-In this case the `carrier` is HTTP request headers object, which we adapt to the carrier API
-by wrapping in `RequestBuilderCarrier` helper class. 
-
-```java
-private static class RequestBuilderCarrier implements io.opentracing.propagation.TextMap {
-    private final Request.Builder builder;
-
-    RequestBuilderCarrier(Request.Builder builder) {
-        this.builder = builder;
-    }
-
-    @Override
-    public Iterator<Entry<String, String>> iterator() {
-        throw new UnsupportedOperationException("carrier is write-only");
-    }
-
-    @Override
-    public void put(String key, String value) {
-        builder.addHeader(key, value);
-    }
-}
+var dictionary = new Dictionary<string, string>();
+_tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new TextMapInjectAdapter(dictionary));
+foreach (var entry in dictionary)
+    _webClient.Headers.Add(entry.Key, entry.Value);
 ```
 
 Notice that we also add a couple additional tags to the span with some metadata about the HTTP request,
@@ -277,116 +134,236 @@ Our servers are currently not instrumented for tracing. We need to do the follow
 
 #### Add some imports
 
-```java
-import io.opentracing.Scope;
-import io.opentracing.Tracer;
-import lib.Tracing;
+```csharp
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc;
+using OpenTracing;
+using OpenTracing.Tutorial.Library;
 ```
 
-#### Create an instance of a Tracer, similar to how we did it in `Hello.java`
+#### Create an instance of a Tracer, similar to how we did it in `Hello.cs`
 
 Add a member variable and a constructor to the Formatter:
 
-```java
-private final Tracer tracer;
+```csharp
+private readonly ITracer _tracer;
 
-private Formatter(Tracer tracer) {
-    this.tracer = tracer;
+public FormatController(ITracer tracer)
+{
+    _tracer = tracer;
 }
 ```
 
-Replace the call to `Formatter.run()` with this:
+Add a tracer property to the `Startup` class:
 
-```java
-Tracer tracer = Tracing.init("formatter");
-new Formatter(tracer).run(args);
+```csharp
+private static readonly Tracer Tracer = Tracing.Init("Webservice");
 ```
+
+Register the tracer and add it to the services, making it available globally:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddMvc();
+
+    GlobalTracer.Register(Tracer);
+    services.AddOpenTracing();
+}
+```
+
+And dispose of it during application shutdown:
+
+```csharp
+public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
+{
+    if (env.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
+    }
+
+    applicationLifetime.ApplicationStopping.Register(Tracer.Dispose);
+    app.UseMvc();
+}
+```
+
+Just by adding OpenTracing to the active services we already get a lot of tracing for free.
+Starting the server at this point and making a request should result in a couple of spans reported:
+
+![Trace](trace-server-unfinished.png)
 
 #### Extract the span context from the incoming request using `tracer.extract`
 
 First, add a helper function:
 
-```java
-public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
-        String operationName) {
-    // format the headers for extraction
-    MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
-    final HashMap<String, String> headers = new HashMap<String, String>();
-    for (String key : rawHeaders.keySet()) {
-        headers.put(key, rawHeaders.get(key).get(0));
+```csharp
+public static IScope StartServerSpan(ITracer tracer, IDictionary<string, string> headers, string operationName)
+{
+    ISpanBuilder spanBuilder;
+    try
+    {
+        ISpanContext parentSpanCtx = tracer.Extract(BuiltinFormats.HttpHeaders, new TextMapExtractAdapter(headers));
+
+        spanBuilder = tracer.BuildSpan(operationName);
+        if (parentSpanCtx != null)
+        {
+            spanBuilder = spanBuilder.AsChildOf(parentSpanCtx);
+        }
+    }
+    catch (Exception)
+    {
+        spanBuilder = tracer.BuildSpan(operationName);
     }
 
-    Tracer.SpanBuilder spanBuilder;
-    try {
-        SpanContext parentSpan = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
-        if (parentSpan == null) {
-            spanBuilder = tracer.buildSpan(operationName);
-        } else {
-            spanBuilder = tracer.buildSpan(operationName).asChildOf(parentSpan);
-        }
-    } catch (IllegalArgumentException e) {
-        spanBuilder = tracer.buildSpan(operationName);
-    }
-    return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(true);
+    // TODO could add more tags like http.url
+    return spanBuilder.WithTag(Tags.SpanKind.Key, Tags.SpanKindServer).StartActive(true);
 }
 ```
 
-The logic here is similar to the client side instrumentation, except that we are using `tracer.extract`
-and tagging the span as `span.kind=server`. Instead of using a dedicated adapter class to convert
-JAXRS `HttpHeaders` type into `io.opentracing.propagation.TextMap`, we are copying the headers to a plain
-`HashMap<String, String>` and using a standard adapter `TextMapExtractAdapter`.
+The logic here is similar to the client side instrumentation, except that we are using `_tracer.Extract`
+and tagging the span as `span.kind=server`. We are extracting the headers via `TextMapExtractAdapter`.
 
-Now change the `FormatterResource` handler method to use `startServerSpan`:
+Now change the `/api/Format/helloString` handler method to use `StartServerSpan`:
 
-```java
-@GET
-public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
-    try (Scope scope = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
-        String helloStr = String.format("Hello, %s!", helloTo);
-        scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
-        return helloStr;
+```csharp
+[HttpGet("{helloString}", Name = "GetFormat")]
+public string Get(string helloString)
+{
+    var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
+    using (var scope = Tracing.StartServerSpan(_tracer, headers, "FormatController"))
+    {
+        var formattedHelloString = $"Hello, {helloString}!";
+        scope.Span.Log(new Dictionary<string, object>
+        {
+            [LogFields.Event] = "string-format",
+            ["value"] = formattedHelloString
+        });
+        return formattedHelloString;
     }
 }
 ```
 
 ### Take It For a Spin
 
-As before, first run the `formatter` and `publisher` apps in separate terminals.
-Then run `lesson03.exercise.Hello`. You should see the outputs like this:
+As before, first run the `Lesson03.Exercise.Server` project in Visual Studio.
+Then run `Lesson03.Exercise.Client` in the terminal. You should see an output like this:
 
+Server output (ASP.NET Core Web Server):
+
+```powershell
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+        ...
+    },
+    ...
+    "References": [
+        {
+        "Type": "child_of",
+        "Context": {
+            "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+            ...
+            }
+        }
+    ],
+    ...
+}
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+        ...
+    },
+    ...
+    "References": [
+        {
+        "Type": "child_of",
+        "Context": {
+            "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+            ...
+            }
+        }
+    ],
+    ...
+}
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+        ...
+    },
+    ...
+    "References": [
+        {
+        "Type": "child_of",
+        "Context": {
+            "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+            ...
+            }
+        }
+    ],
+    ...
+}
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+        ...
+    },
+    ...
+}
 ```
-# client
-$ ./run.sh lesson03.exercise.Hello Bryan
-INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:5fe2d9de96c3887a:0:1 - say-hello
 
-# formatter
-$ ./run.sh lesson03.exercise.Formatter server
-[skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3968ms
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:b73ff97ea68a36f8:72910f6018b1bd09:1 - format
-127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 13 "-" "okhttp/3.9.0" 3
+Client terminal output:
 
-# publisher
-$ ./run.sh lesson03.exercise.Publisher server
-[skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3388ms
+```powershell
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+        ...
+    },
+    ...
+}
 Hello, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:4a2c39e462cb2a92:62d73167c129ecd7:1 - publish
-127.0.0.1 - - "GET /publish?helloStr=Hello,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 80
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+        ...
+    },
+    ...
+}
+
+info: Jaeger.Core.Reporters.LoggingReporter[0]
+Reporting span:
+{
+    "Context": {
+        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
+        ...
+    },
+    ...
+}
 ```
 
-Note how all recorded spans show the same trace ID `5fe2d9de96c3887a`. This is a sign
-of correct instrumentation. It is also a very useful debugging approach when something
+Note how all recorded spans show the same trace ID
+`{ "High": 15765884733735375433, "Low": 8792954367037605704, "IsValid": true }`.
+This is a sign of correct instrumentation. It is also a very useful debugging approach when something
 is wrong with tracing. A typical error is to miss the context propagation somwehere,
 either in-process or inter-process, which results in different trace IDs and broken
 traces.
 
-If we open this trace in the UI, we should see all five spans.
+If we open this trace in the UI, we see all spans across client _and_ server.
 
-![Trace](../../../../../go/lesson03/trace.png)
+![Trace](trace-final.png)
 
 ## Conclusion
 
