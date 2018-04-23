@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using OpenTracing;
 using OpenTracing.Tutorial.Library;
 
-namespace Lesson03.Exercise.Server.Controllers
+namespace OpenTracing.Tutorial.Lesson04.Solution.Server.Controllers
 {
     [Route("api/Format")]
     public class FormatController : Controller

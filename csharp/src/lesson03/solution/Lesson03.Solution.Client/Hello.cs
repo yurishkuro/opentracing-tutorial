@@ -6,7 +6,7 @@ using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace Lesson03.Exercise.Client
+namespace OpenTracing.Tutorial.Lesson03.Solution.Client
 {
     internal class Hello
     {

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 using OpenTracing.Tutorial.Library;
 using OpenTracing.Util;
 
-namespace Lesson03.Exercise.Server
+namespace OpenTracing.Tutorial.Lesson04.Solution.Server
 {
     public class Startup
     {

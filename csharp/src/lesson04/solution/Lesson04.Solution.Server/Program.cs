@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace Lesson03.Exercise.Server
+namespace OpenTracing.Tutorial.Lesson04.Solution.Server
 {
     public class Program
     {
