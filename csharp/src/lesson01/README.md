@@ -51,7 +51,7 @@ Hello, Bryan!
 A trace is a directed acyclic graph of spans. A span is a logical representation of some work done in your application.
 Each span has these minimum attributes: an operation name, a start time, and a finish time.
 
-Let's create a trace that consists of just a single span. To do that we need an instance of the `io.opentracing.Tracer`.
+Let's create a trace that consists of just a single span. To do that we need an instance of the `OpenTracing.ITracer`.
 We can use a global instance returned by `OpenTracing.Util.GlobalTracer.Instance`.
 
 ```csharp
