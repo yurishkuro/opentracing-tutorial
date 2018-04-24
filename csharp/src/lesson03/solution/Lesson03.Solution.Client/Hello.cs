@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using OpenTracing.Tutorial.Library;
-using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
