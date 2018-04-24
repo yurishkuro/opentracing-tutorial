@@ -39,10 +39,7 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
             try
             {
                 Console.WriteLine(helloString);
-                span.Log(new Dictionary<string, object>
-                {
-                    [LogFields.Event] = "WriteLine"
-                });
+                span.Log("WriteLine");
             }
             finally
             {
@@ -67,7 +64,7 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
         //    }
 
         //    var helloTo = args[0];
-        //    using (var tracer = Tracing.Init("say-hello"))
+        //    using (var tracer = Tracing.Init("hello-world"))
         //    {
         //        new HelloManual(tracer).SayHello(helloTo);
         //    }

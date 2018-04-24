@@ -47,10 +47,7 @@ namespace OpenTracing.Tutorial.Lesson04.Solution.Client
             using (var scope = _tracer.BuildSpan("PrintHello").StartActive(true))
             {
                 Console.WriteLine(helloString);
-                scope.Span.Log(new Dictionary<string, object>
-                {
-                    [LogFields.Event] = "WriteLine"
-                });
+                scope.Span.Log("WriteLine");
             }
         }
 
@@ -74,7 +71,7 @@ namespace OpenTracing.Tutorial.Lesson04.Solution.Client
 
             var helloTo = args[0];
             var greeting = args[1];
-            using (var tracer = Tracing.Init("say-hello"))
+            using (var tracer = Tracing.Init("hello-world"))
             {
                 new Hello(tracer).SayHello(helloTo, greeting);
             }
