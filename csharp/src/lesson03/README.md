@@ -383,8 +383,8 @@ public void ConfigureServices(IServiceCollection services)
 #### Adjust the `FormatController` class
 
 Previously we added the `StartServerSpan` helper which needed to extract the rootSpan from the headers. Since 
-this is always the case when using ASP.NET Core, this has not to be done manually and is done by the middleware. 
-We can just use the span builder with the active span as we done it on the client side.
+this is always the case when using ASP.NET Core, this has not to be done manually as it is done by the middleware. 
+We can just use the span builder with the active span as we did on the client side.
 
 ```csharp
 // GET: api/format/helloString
