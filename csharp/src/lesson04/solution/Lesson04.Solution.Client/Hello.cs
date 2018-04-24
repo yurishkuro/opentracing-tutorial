@@ -21,7 +21,7 @@ namespace OpenTracing.Tutorial.Lesson04.Solution.Client
         {
             using (var scope = _tracer.BuildSpan("format-string").StartActive(true))
             {
-                var url = $"http://localhost:56870/api/format/{helloTo}";
+                var url = $"http://localhost:8081/api/format/{helloTo}";
                 var span = _tracer.ActiveSpan;
                 Tags.SpanKind.Set(span, Tags.SpanKindClient);
                 Tags.HttpMethod.Set(span, "GET");

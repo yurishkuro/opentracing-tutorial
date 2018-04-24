@@ -17,7 +17,7 @@ it is carried over in-band with all RPC requests, just like baggage.
 To see how it works in OpenTracing, let's take the application we built in Lesson 3. Please copy
 your solution from that lesson as a base.
 
-The `formatter` service takes the `helloTo` parameter and returns a string `Hello, {helloTo}!`. Let's modify
+The `FormatController` service takes the `helloTo` parameter and returns a string `Hello, {helloTo}!`. Let's modify
 it so that we can customize the greeting too, but without modifying the public API of that service.
 
 ### Set Baggage in the Client
@@ -49,9 +49,9 @@ scope.Span.SetBaggageItem("greeting", greeting);
 
 By doing this we read a second command line argument as a "greeting" and store it in the baggage under `"greeting"` key.
 
-### Read Baggage in Formatter
+### Read Baggage in `FormatController`
 
-Add the following code to the `formatter`'s HTTP handler:
+Add the following code to the `FormatController`'s HTTP handler:
 
 ```csharp
 var greeting = scope.Span.GetBaggageItem("greeting") ?? "Hello";
@@ -78,8 +78,8 @@ Bonjour, Bryan!
 
 We may ask - so what, we could've done the same thing by passing the `greeting` as an HTTP request parameter.
 However, that is exactly the point of this exercise - we did not have to change any APIs on the path from
-the root span in `Hello.cs` all the way to the server-side span in `formatter`, three levels down.
-If we had a much larger application with much deeper call tree, say the `formatter` was 10 levels down,
+the root span in `Hello.cs` all the way to the server-side span in `FormatController`, three levels down.
+If we had a much larger application with much deeper call tree, say the `FormatController` was 10 levels down,
 the exact code changes we made here would have worked, despite 8 more services being in the path.
 If changing the API was the only way to pass the data, we would have needed to modify 8 more services
 to get the same effect.
