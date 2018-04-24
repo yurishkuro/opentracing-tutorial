@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTracing.Tutorial.Library;
-using System.Reflection;
 
 namespace OpenTracing.Tutorial.Lesson02.Solution
 {
@@ -16,7 +15,7 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
 
         private string FormatString(string helloTo)
         {
-            using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+            using (var scope = _tracer.BuildSpan("format-string").StartActive(true))
             {
                 var helloString = $"Hello, {helloTo}!";
                 scope.Span.Log(new Dictionary<string, object>
@@ -30,7 +29,7 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
 
         private void PrintHello(string helloString)
         {
-            using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+            using (var scope = _tracer.BuildSpan("print-hello").StartActive(true))
             {
                 Console.WriteLine(helloString);
                 scope.Span.Log("WriteLine");
@@ -39,7 +38,7 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
 
         public void SayHello(string helloTo)
         {
-            using (var scope = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).StartActive(true))
+            using (var scope = _tracer.BuildSpan("say-hello").StartActive(true))
             {
                 scope.Span.SetTag("hello-to", helloTo);
                 var helloString = FormatString(helloTo);
