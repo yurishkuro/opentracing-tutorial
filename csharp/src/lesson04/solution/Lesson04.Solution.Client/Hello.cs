@@ -20,7 +20,7 @@ namespace OpenTracing.Tutorial.Lesson04.Solution.Client
 
         private string FormatString(string helloTo)
         {
-            using (var scope = _tracer.BuildSpan("FormatString").StartActive(true))
+            using (var scope = _tracer.BuildSpan("format-string").StartActive(true))
             {
                 var url = $"http://localhost:56870/api/format/{helloTo}";
                 var span = _tracer.ActiveSpan;
@@ -44,7 +44,7 @@ namespace OpenTracing.Tutorial.Lesson04.Solution.Client
 
         private void PrintHello(string helloString)
         {
-            using (var scope = _tracer.BuildSpan("PrintHello").StartActive(true))
+            using (var scope = _tracer.BuildSpan("print-hello").StartActive(true))
             {
                 Console.WriteLine(helloString);
                 scope.Span.Log("WriteLine");
@@ -53,7 +53,7 @@ namespace OpenTracing.Tutorial.Lesson04.Solution.Client
 
         private void SayHello(string helloTo, string greeting)
         {
-            using (var scope = _tracer.BuildSpan("SayHello").StartActive(true))
+            using (var scope = _tracer.BuildSpan("say-hello").StartActive(true))
             {
                 scope.Span.SetBaggageItem("greeting", greeting);
                 scope.Span.SetTag("hello-to", helloTo);
