@@ -8,7 +8,7 @@ namespace OpenTracing.Tutorial.Lesson01.Solution
     {
         private readonly ITracer _tracer;
 
-        public Hello(OpenTracing.ITracer tracer)
+        public Hello(ITracer tracer)
         {
             _tracer = tracer;
         }
