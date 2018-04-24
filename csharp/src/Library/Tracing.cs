@@ -24,27 +24,5 @@ namespace OpenTracing.Tutorial.Library
                 .WithReporter(new CompositeReporter(loggingReporter, remoteReporter))
                 .Build();
         }
-
-        public static IScope StartServerSpan(ITracer tracer, IDictionary<string, string> headers, string operationName)
-        {
-            ISpanBuilder spanBuilder;
-            try
-            {
-                ISpanContext parentSpanCtx = tracer.Extract(BuiltinFormats.HttpHeaders, new TextMapExtractAdapter(headers));
-
-                spanBuilder = tracer.BuildSpan(operationName);
-                if (parentSpanCtx != null)
-                {
-                    spanBuilder = spanBuilder.AsChildOf(parentSpanCtx);
-                }
-            }
-            catch (Exception)
-            {
-                spanBuilder = tracer.BuildSpan(operationName);
-            }
-
-            // TODO could add more tags like http.url
-            return spanBuilder.WithTag(Tags.SpanKind.Key, Tags.SpanKindServer).StartActive(true);
-        }
     }
 }

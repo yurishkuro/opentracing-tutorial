@@ -27,8 +27,7 @@ namespace OpenTracing.Tutorial.Lesson03.Solution.Server.Controllers
         [HttpGet("{helloString}", Name = "GetFormat")]
         public string Get(string helloString)
         {
-            var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
-            using (var scope = Tracing.StartServerSpan(_tracer, headers, "FormatController"))
+            using (var scope = _tracer.BuildSpan("format-controller").StartActive(true))
             {
                 var formattedHelloString = $"Hello, {helloString}!";
                 scope.Span.Log(new Dictionary<string, object>
