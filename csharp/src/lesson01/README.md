@@ -34,8 +34,7 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
             }
 
             var helloTo = args[0];
-            var hello = new Hello();
-            hello.SayHello(helloTo);
+            new Hello().SayHello(helloTo);
         }
     }
 }
@@ -52,8 +51,8 @@ Hello, Bryan!
 A trace is a directed acyclic graph of spans. A span is a logical representation of some work done in your application.
 Each span has these minimum attributes: an operation name, a start time, and a finish time.
 
-Let's create a trace that consists of just a single span. To do that we need an instance of the `io.opentracing.Tracer`.
-We can use a global instance returned by `io.opentracing.util.GlobalTracer.get()`.
+Let's create a trace that consists of just a single span. To do that we need an instance of the `OpenTracing.ITracer`.
+We can use a global instance returned by `OpenTracing.Util.GlobalTracer.Instance`.
 
 ```csharp
 using System;
@@ -67,7 +66,7 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
 
         public Hello(OpenTracing.ITracer tracer)
         {
-            this._tracer = tracer;
+            _tracer = tracer;
         }
 
         public void SayHello(string helloTo)
@@ -93,20 +92,22 @@ namespace OpenTracing.Tutorial.Lesson01.Exercise
 ```
 
 We are using the following basic features of the OpenTracing API:
-  * a `tracer` instance is used to create a span builder via `BuildSpan()`
-  * each `span` is given an _operation name_, `"say-hello"` in this case
+  * a `ITracer` instance is used to create a span builder via `BuildSpan()`
+  * each `ISpan` is given an _operation name_, `"say-hello"` in this case
   * builder is used to create a span via `Start()`
-  * each `span` must be finished by calling its `Finish()` function
+  * each `ISpan` must be finished by calling its `Finish()` function
   * the start and end timestamps of the span will be captured automatically by the tracer implementation
 
 However, if we run this program, we will see no difference, and no traces in the tracing UI.
-That's because the function `GlobalTracer.Instance` returns a no-op tracer by default.
+That's because the `GlobalTracer.Instance` returns a no-op tracer by default.
 
 ### Initialize a real tracer
 
 Let's create an instance of a real tracer, such as Jaeger (https://github.com/jaegertracing/jaeger-client-csharp).
 
 First let's define a helper function that will create a tracer.
+
+(TODO: This has to use the Configuration helper once Jaeger 0.0.10 is released!)
 
 ```csharp
 using Jaeger.Core;
@@ -131,14 +132,14 @@ private static Tracer InitTracer(string serviceName)
 To use this instance, let's change the main function:
 
 ```csharp
-using (var tracer = InitTracer("say-hello"))
+using (var tracer = InitTracer("hello-world"))
 {
     new Hello(tracer).SayHello(helloTo);
 }
 ```
 
-Note that we are passing a string `say-world` to the init method. It is used to mark all spans emitted by
-the tracer as originating from a `say-world` service.
+Note that we are passing a string `hello-world` to the init method. It is used to mark all spans emitted by
+the tracer as originating from a `hello-world` service.
 
 If we run the program now, we should see a span logged:
 
@@ -206,7 +207,7 @@ In the case of `Hello Bryan`, the string `"Bryan"` is a good candidate for a spa
 to the whole span and not to a particular moment in time. We can record it like this:
 
 ```csharp
-var span = tracer.BuildSpan("say-hello").Start();
+var span = _tracer.BuildSpan("say-hello").Start();
 span.SetTag("hello-to", helloTo);
 ```
 
@@ -225,10 +226,7 @@ span.Log(new Dictionary<string, object>
     }
 );
 Console.WriteLine(helloString);
-span.Log(new Dictionary<string, object>
-{
-    [LogFields.Event] = "WriteLine"
-});
+span.Log("WriteLine");
 ```
 
 The log statements might look a bit strange if you have not previously worked with a structured logging API.
@@ -242,7 +240,8 @@ The OpenTracing API for C# exposes the structured logging API by accepting a dic
 in the form of a `Dictionary<string, object>`.
 
 The OpenTracing Specification also recommends all log statements to contain an `event` field that
-describes the overall event being logged, with other attributes of the event provided as additional fields.
+describes the overall event being logged, with other attributes of the event provided as additional fields. 
+If only an `event` is to be used, the C# API offers an shorthand like showed with `span.Log("WriteLine");`.
 
 If you run the program with these changes, then find the trace in the UI and expand its span (by clicking on it),
 you will be able to see the tags and logs.

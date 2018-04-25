@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Net;
 using OpenTracing.Tutorial.Library;
-using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace Lesson03.Exercise.Client
+namespace OpenTracing.Tutorial.Lesson04.Solution.Client
 {
     internal class Hello
     {
@@ -20,9 +19,9 @@ namespace Lesson03.Exercise.Client
 
         private string FormatString(string helloTo)
         {
-            using (var scope = _tracer.BuildSpan("FormatString").StartActive(true))
+            using (var scope = _tracer.BuildSpan("format-string").StartActive(true))
             {
-                var url = $"http://localhost:56870/api/format/{helloTo}";
+                var url = $"http://localhost:8081/api/format/{helloTo}";
                 var span = _tracer.ActiveSpan;
                 Tags.SpanKind.Set(span, Tags.SpanKindClient);
                 Tags.HttpMethod.Set(span, "GET");
@@ -44,19 +43,16 @@ namespace Lesson03.Exercise.Client
 
         private void PrintHello(string helloString)
         {
-            using (var scope = _tracer.BuildSpan("PrintHello").StartActive(true))
+            using (var scope = _tracer.BuildSpan("print-hello").StartActive(true))
             {
                 Console.WriteLine(helloString);
-                scope.Span.Log(new Dictionary<string, object>
-                {
-                    [LogFields.Event] = "WriteLine"
-                });
+                scope.Span.Log("WriteLine");
             }
         }
 
         private void SayHello(string helloTo, string greeting)
         {
-            using (var scope = _tracer.BuildSpan("SayHello").StartActive(true))
+            using (var scope = _tracer.BuildSpan("say-hello").StartActive(true))
             {
                 scope.Span.SetBaggageItem("greeting", greeting);
                 scope.Span.SetTag("hello-to", helloTo);
@@ -74,7 +70,7 @@ namespace Lesson03.Exercise.Client
 
             var helloTo = args[0];
             var greeting = args[1];
-            using (var tracer = Tracing.Init("say-hello"))
+            using (var tracer = Tracing.Init("hello-world"))
             {
                 new Hello(tracer).SayHello(helloTo, greeting);
             }

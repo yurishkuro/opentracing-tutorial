@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTracing.Tutorial.Library;
-using System.Reflection;
 
-namespace OpenTracing.Tutorial.Lesson02.Exercise
+namespace OpenTracing.Tutorial.Lesson02.Solution
 {
     internal class HelloManual
     {
@@ -16,7 +15,7 @@ namespace OpenTracing.Tutorial.Lesson02.Exercise
 
         private string FormatString(ISpan rootSpan, string helloTo)
         {
-            var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).AsChildOf(rootSpan).Start();
+            var span = _tracer.BuildSpan("format-string").AsChildOf(rootSpan).Start();
             try
             {
                 var helloString = $"Hello, {helloTo}!";
@@ -35,14 +34,11 @@ namespace OpenTracing.Tutorial.Lesson02.Exercise
 
         private void PrintHello(ISpan rootSpan, string helloString)
         {
-            var span = _tracer.BuildSpan(MethodBase.GetCurrentMethod().Name).AsChildOf(rootSpan).Start();
+            var span = _tracer.BuildSpan("print-hello").AsChildOf(rootSpan).Start();
             try
             {
                 Console.WriteLine(helloString);
-                span.Log(new Dictionary<string, object>
-                {
-                    [LogFields.Event] = "WriteLine"
-                });
+                span.Log("WriteLine");
             }
             finally
             {
@@ -67,7 +63,7 @@ namespace OpenTracing.Tutorial.Lesson02.Exercise
         //    }
 
         //    var helloTo = args[0];
-        //    using (var tracer = Tracing.Init("say-hello"))
+        //    using (var tracer = Tracing.Init("hello-world"))
         //    {
         //        new HelloManual(tracer).SayHello(helloTo);
         //    }

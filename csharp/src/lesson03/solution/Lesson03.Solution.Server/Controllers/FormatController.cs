@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using OpenTracing;
 using OpenTracing.Tutorial.Library;
 
-namespace Lesson03.Exercise.Server.Controllers
+namespace OpenTracing.Tutorial.Lesson03.Solution.Server.Controllers
 {
     [Route("api/Format")]
     public class FormatController : Controller
@@ -27,8 +27,7 @@ namespace Lesson03.Exercise.Server.Controllers
         [HttpGet("{helloString}", Name = "GetFormat")]
         public string Get(string helloString)
         {
-            var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
-            using (var scope = Tracing.StartServerSpan(_tracer, headers, "FormatController"))
+            using (var scope = _tracer.BuildSpan("format-controller").StartActive(true))
             {
                 var formattedHelloString = $"Hello, {helloString}!";
                 scope.Span.Log(new Dictionary<string, object>

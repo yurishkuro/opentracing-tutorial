@@ -40,10 +40,7 @@ private static string FormatString(ISpan span, string helloTo)
 private static void PrintHello(ISpan span, string helloString)
 {
     Console.WriteLine(helloString);
-    span.Log(new Dictionary<string, object>
-    {
-        [LogFields.Event] = "WriteLine"
-    });
+    span.Log("WriteLine");
 }
 ```
 
@@ -54,7 +51,7 @@ using System.Reflection;
 
 private string FormatString(ISpan rootSpan, string helloTo)
 {
-    var span = _tracer.BuildSpan("FormatString").Start();
+    var span = _tracer.BuildSpan("format-string").Start();
     try
     {
         var helloString = $"Hello, {helloTo}!";
@@ -73,14 +70,11 @@ private string FormatString(ISpan rootSpan, string helloTo)
 
 private void PrintHello(ISpan rootSpan, string helloString)
 {
-    var span = _tracer.BuildSpan("PrintHello").Start();
+    var span = _tracer.BuildSpan("print-hello").Start();
     try
     {
         Console.WriteLine(helloString);
-        span.Log(new Dictionary<string, object>
-        {
-            [LogFields.Event] = "WriteLine"
-        });
+        span.Log("WriteLine");
     }
     finally
     {
@@ -127,13 +121,15 @@ Reporting span:
 }
 ```
 
-We got three spans, but there is a problem here. the output for each span shows the Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single span. That's not what we wanted!
+We got three spans, but there is a problem here. The output for each span shows the Jaeger trace ID, yet they 
+are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single 
+span. That's not what we wanted!
 
 What we really wanted was to establish causal relationship between the two new spans to the root
 span started in `Main()`. We can do that by passing an additional option `AsChildOf` to the span builder:
 
 ```csharp
-var span = _tracer.buildSpan("FormatString").AsChildOf(rootSpan).startManual();
+var span = _tracer.BuildSpan("format-string").AsChildOf(rootSpan).Start();
 ```
 
 If we think of the trace as a directed acyclic graph where nodes are the spans and edges are
@@ -147,8 +143,8 @@ complete its operation. Another standard reference type in OpenTracing is `Follo
 means the `rootSpan` is the ancestor in the DAG, but it does not depend on the completion of the
 child span, for example if the child represents a best-effort, fire-and-forget cache write.
 
-If we modify the `PrintHello` function and `FormatString` function accordingly and run the app, we'll see that all reported
-spans now belong to the same trace:
+If we modify the `PrintHello` function and `FormatString` function accordingly and run the app, we'll see that 
+all reported spans now belong to the same trace:
 
 ```powershell
 $ dotnet run Bryan
@@ -201,7 +197,8 @@ Reporting span:
 }
 ```
 
-We can also see for the first two reported spans the `References` array contains references of type `child_of` with the ID of the root span. The root span is reported last because it is the last one to finish.
+We can also see for the first two reported spans the `References` array contains references of type `child_of` 
+with the ID of the root span. The root span is reported last because it is the last one to finish.
 
 If we find this trace in the UI, it will show a proper parent-child relationship between the spans.
 
@@ -219,7 +216,7 @@ we can avoid passing the span through our code and just access it via `_tracer`.
 ```csharp
 private string FormatString(string helloTo)
 {
-    using (var scope = _tracer.BuildSpan("FormatString").StartActive(true))
+    using (var scope = _tracer.BuildSpan("format-string").StartActive(true))
     {
         var helloString = $"Hello, {helloTo}!";
         scope.Span.Log(new Dictionary<string, object>
@@ -233,7 +230,7 @@ private string FormatString(string helloTo)
 
 private void PrintHello(string helloString)
 {
-    using (var scope = _tracer.BuildSpan("PrintHello").StartActive(true))
+    using (var scope = _tracer.BuildSpan("print-hello").StartActive(true))
     {
         Console.WriteLine(helloString);
         scope.Span.Log(new Dictionary<string, object>
@@ -245,7 +242,7 @@ private void PrintHello(string helloString)
 
 public void SayHello(string helloTo)
 {
-    using (var scope = _tracer.BuildSpan("SayHello").StartActive(true))
+    using (var scope = _tracer.BuildSpan("say-hello").StartActive(true))
     {
         scope.Span.SetTag("hello-to", helloTo);
         var helloString = FormatString(helloTo);
@@ -257,11 +254,11 @@ public void SayHello(string helloTo)
 In the above code we're making the following changes:
   * We use `StartActive()` method of the span builder instead of `Start()`,
     which makes the span "active" by storing it in a thread-local storage.
-  * `StartActive()` returns a `Scope` object instead of a `Span`. Scope is a container of the currently
+  * `StartActive()` returns a `IScope` object instead of a `ISpan`. IScope is a container of the currently
     active span. We access the active span via `scope.Span`. Once the scope is closed, the previous
     scope becomes current, thus re-activating previously active span in the current thread.
-  * `Scope` is auto-closable, which allows us to use try-with-resource syntax.
-  * The boolean parameter in `StartActive(true)` tells the Scope that once it is closed it should
+  * `IScope` implements `IDisposable`, which allows us to use the `using` syntax.
+  * The boolean parameter in `StartActive(true)` tells the Scope that once it is disposed it should
     finish the span it represents.
   * `StartActive()` automatically creates a `ChildOf` reference to the previously active span, so that
     we don't have to use `AsChildOf()` builder method explicitly.

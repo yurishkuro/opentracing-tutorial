@@ -8,9 +8,9 @@ namespace OpenTracing.Tutorial.Lesson01.Solution
     {
         private readonly ITracer _tracer;
 
-        public Hello(OpenTracing.ITracer tracer)
+        public Hello(ITracer tracer)
         {
-            this._tracer = tracer;
+            _tracer = tracer;
         }
 
         public void SayHello(string helloTo)
@@ -25,10 +25,7 @@ namespace OpenTracing.Tutorial.Lesson01.Solution
                 }
             );
             Console.WriteLine(helloString);
-            span.Log(new Dictionary<string, object>
-            {
-                [LogFields.Event] = "WriteLine"
-            });
+            span.Log("WriteLine");
             span.Finish();
         }
 
@@ -40,7 +37,7 @@ namespace OpenTracing.Tutorial.Lesson01.Solution
             }
 
             var helloTo = args[0];
-            using (var tracer = Tracing.Init("say-hello"))
+            using (var tracer = Tracing.Init("hello-world"))
             {
                 new Hello(tracer).SayHello(helloTo);
             }
