@@ -29,7 +29,7 @@ const sayHello = helloTo => {
   const span = tracer.startSpan("say-hello");
   span.setTag("hello-to", helloTo);
   const helloStr = formatString(span, helloTo);
-  printString(span, helloStr);
+  printHello(span, helloStr);
   span.finish();
 };
 
@@ -42,7 +42,7 @@ const formatString = (span, helloTo) => {
   return helloStr;
 };
 
-const printString = (span, helloStr) => {
+const printHello = (span, helloStr) => {
   console.log(helloStr);
   span.log({ event: "print-string" });
 };
@@ -52,7 +52,7 @@ Of course, this does not change the outcome. What we really want to do is to wra
 
 ```javascript
 const formatString = (rootSpan, helloTo) => {
-  const span = tracer.startSpan("format");
+  const span = tracer.startSpan("formatString");
   const helloStr = `Hello, ${helloTo}!`;
   span.log({
     event: "string-format",
@@ -62,8 +62,8 @@ const formatString = (rootSpan, helloTo) => {
   return helloStr;
 };
 
-const printString = (rootSpan, helloStr) => {
-  const span = tracer.startSpan("consoleLog");
+const printHello = (rootSpan, helloStr) => {
+  const span = tracer.startSpan("printHello");
   console.log(helloStr);
   span.log({ event: "print-string" });
   span.finish();
@@ -81,28 +81,13 @@ INFO  Reporting span e29038503bfab9e5:e29038503bfab9e5:0:1
 INFO  Reporting span e0908f7e4104c7f9:e0908f7e4104c7f9:0:1
 ```
 
-<!--
-The output in the console (above) is quite different from the output given in the Python tutorial:
-```
-$ python -m lesson02.exercise.hello Bryan
-Initializing Jaeger Tracer with UDP reporter
-Using sampler ConstSampler(True)
-opentracing.tracer initialized to <jaeger_client.tracer.Tracer object at 0x10d0bcf10>[app_name=hello-world]
-Reporting span a5224a80cebaee4:a5224a80cebaee4:0:1 hello-world.format
-Hello, Bryan!
-Reporting span 947f0ad168b588aa:947f0ad168b588aa:0:1 hello-world.println
-Reporting span 7fe927d093e3e33c:7fe927d093e3e33c:0:1 hello-world.say-hello
-```
-which implies the node client is perhaps written with significant differences from python client?
--->
-
 We got three spans, but there is a problem here. The first hexadecimal segment of the output represents Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single span. That's not what we wanted!
 
 What we really wanted was to establish a causal relationship between the two new spans to the root span. We can do that by passing an additional option to the `startSpan` function:
 
 ```javascript
 const formatString = (rootSpan, helloTo) => {
-  const span = tracer.startSpan("format", { childOf: rootSpan });
+  const span = tracer.startSpan("formatString", { childOf: rootSpan });
   const helloStr = `Hello, ${helloTo}!`;
   span.log({
     event: "string-format",
@@ -112,8 +97,8 @@ const formatString = (rootSpan, helloTo) => {
   return helloStr;
 };
 
-const printString = (rootSpan, helloStr) => {
-  const span = tracer.startSpan("consoleLog", { childOf: rootSpan });
+const printHello = (rootSpan, helloStr) => {
+  const span = tracer.startSpan("printHello", { childOf: rootSpan });
   console.log(helloStr);
   span.log({ event: "print-string" });
   span.finish();
@@ -122,13 +107,13 @@ const printString = (rootSpan, helloStr) => {
 
 If we think of the trace as a directed acyclic graph where nodes are the spans and edges are the causal relationships between them, then the `childOf` option is used to create one such edge between `span` and `rootSpan`. In the API the edges are represented by `SpanReference` type that consists of a `SpanContext` and a label. The `SpanContext` represents an immutable, thread-safe portion of the span that can be used to establish references or to propagate it over the wire. The label, or `ReferenceType`, describes the nature of the relationship. `ChildOf` relationship means that the `rootSpan` has a logical dependency on the child `span` before `rootSpan` can complete its operation. Another standard reference type in OpenTracing is `FollowsFrom`, which means the `rootSpan` is the ancestor in the DAG, but it does not depend on the completion of the child span, for example if the child represents a best-effort, fire-and-forget cache write.
 
-If we modify the `formatString` and `printString` functions accordingly and run the app, we'll see that all reported spans now belong to the same trace:
+If we modify the `formatString` and `printHello` functions accordingly and run the app, we'll see that all reported spans now belong to the same trace:
 
 ```
-node lesson02/exercise/hello.js Kara
+node lesson02/exercise/hello.js Bryan
 INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
 INFO  Reporting span f807cdcd1b44f817:9cb1e0041868bfcd:f807cdcd1b44f817:1
-Hello, Kara!
+Hello, Bryan!
 INFO  Reporting span f807cdcd1b44f817:6d38799352b613ec:f807cdcd1b44f817:1
 INFO  Reporting span f807cdcd1b44f817:f807cdcd1b44f817:0:1
 ```
@@ -139,7 +124,7 @@ If we find this trace in the UI, it will show a proper parent-child relationship
 
 ### Propagate the in-process context
 
-You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object as the first argument to each function. JavaScript does not support the notion of thread-local variables, so in order to link the individual spans together we _do need to pass something_. To avoid polluting the application with tracing code, we will create a context object in which to store the currently active span and pass that instead. The context object enables us to pass data, in addition to the span, that may be relevant to the application.
+You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object as the first argument to each function. JavaScript does not support the notion of thread-local variables, so in order to link the individual spans together we _do need to pass something_. To avoid polluting the application with tracing code, we will create a context object in which to store the currently active span and pass that instead. The context object enables us to pass data, in addition to the span, that may be relevant to the application for the given request or transaction.
 
 First, we need to create a context object, which we'll name `ctx`, in the main `sayHello()` function and store the span in it:
 
@@ -151,21 +136,21 @@ Then we pass the `ctx` object instead of the `rootSpan`:
 
 ```javascript
 const helloStr = formatString(ctx, helloTo);
-printString(ctx, helloStr);
+printHello(ctx, helloStr);
 ```
 
-And we modify the `formatString()` and `printString()` functions to change the value of the span property of the passed in `ctx` object. We set the value of the span property to be a new span that is defined as a `childOf` the span contained as a property on the passed in `ctx` object:
+And we modify the `formatString()` and `printHello()` functions to reassign the value of the span property on the `ctx` object. We set the value of the span property to be a new span that is defined as a `childOf` the span property on the passed in `ctx` object:
 
 ```javascript
 const formatString = (ctx, helloTo) => {
   ctx = {
-    span: tracer.startSpan("format", { childOf: ctx.span }),
+    span: tracer.startSpan("formatString", { childOf: ctx.span }),
   };
   ...
 }
-const printString = (ctx, helloStr) => {
+const printHello = (ctx, helloStr) => {
     ctx = {
-      span: tracer.startSpan("consoleLog", { childOf: ctx.span }),
+      span: tracer.startSpan("printHello", { childOf: ctx.span }),
     };
   ...
 }

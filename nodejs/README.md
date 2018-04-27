@@ -48,8 +48,6 @@ function initTracer(serviceName) {
 }
 ```
 
-Note that Lesson 1 has a solution provided, which you can use to bootstrap your work for the other lessons.
-
 ## Lessons
 
 * [Lesson 01 - Hello World](./lesson01)

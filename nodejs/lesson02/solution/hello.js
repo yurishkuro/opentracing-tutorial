@@ -8,13 +8,13 @@ const sayHello = helloTo => {
   const ctx = { span };
   span.setTag("hello-to", helloTo);
   const helloStr = formatString(ctx, helloTo);
-  printString(ctx, helloStr);
+  printHello(ctx, helloStr);
   span.finish();
 };
 
 const formatString = (ctx, helloTo) => {
   ctx = {
-    span: tracer.startSpan("format", { childOf: ctx.span }),
+    span: tracer.startSpan("formatString", { childOf: ctx.span }),
   };
   const helloStr = `Hello, ${helloTo}!`;
   ctx.span.log({
@@ -25,9 +25,9 @@ const formatString = (ctx, helloTo) => {
   return helloStr;
 };
 
-const printString = (ctx, helloStr) => {
+const printHello = (ctx, helloStr) => {
   ctx = {
-    span: tracer.startSpan("consoleLog", { childOf: ctx.span }),
+    span: tracer.startSpan("printHello", { childOf: ctx.span }),
   };
   console.log(helloStr);
   ctx.span.log({ event: "print-string" });

@@ -37,8 +37,8 @@ sayHello(helloTo);
 Run it:
 
 ```
-$ node lesson01/exercise/hello.js Kara
-Hello, Kara!
+$ node lesson01/exercise/hello.js Bryan
+Hello, Bryan!
 ```
 
 ### Create a trace
@@ -123,9 +123,9 @@ tracer.close(() => process.exit());
 If we run the program now, we should see a span logged:
 
 ```
-$ node lesson01/exercise/hello.js Kara
+$ node lesson01/exercise/hello.js Bryan
 INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
-Hello, Kara!
+Hello, Bryan!
 INFO  Reporting span d42d649b3ba9f0f3:d42d649b3ba9f0f3:0:1
 ```
 
@@ -134,10 +134,10 @@ If you have Jaeger backend running, you should be able to see the trace in the U
 ### Annotate the Trace with Tags and Logs
 
 Right now the trace we created is very basic. If we call our program with argument `Susan`
-instead of `Kara`, the resulting traces will be nearly identical. It would be nice if we could
+instead of `Bryan`, the resulting traces will be nearly identical. It would be nice if we could
 capture the program arguments in the traces to distinguish them.
 
-One naive way is to use the string `"Hello, Kara!"` as the _operation name_ of the span, instead of `"say-hello"`.
+One naive way is to use the string `"Hello, Bryan!"` as the _operation name_ of the span, instead of `"say-hello"`.
 However, such practice is highly discouraged in distributed tracing, because the operation name is meant to
 represent a _class of spans_, rather than a unique instance. For example, in Jaeger UI you can select the
 operation name from a dropdown when searching for traces. It would be very bad user experience if we ran the
@@ -160,7 +160,7 @@ for recommended tags and log fields.
 
 #### Using Tags
 
-In the case of `hello Kara`, the string "Kara" is a good candidate for a span tag, since it applies
+In the case of `hello Bryan`, the string "Bryan" is a good candidate for a span tag, since it applies
 to the whole span and not to a particular moment in time. We can record it like this:
 
 ```javascript
