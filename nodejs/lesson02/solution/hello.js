@@ -1,52 +1,42 @@
-'use strict';
+const assert = require("assert");
+const { initTracer } = require("../../lib/tracing");
 
-const assert = require('assert');
-const initTracer = require('../../lib/tracing').initTracer;
+const tracer = initTracer("hello-world");
 
-function sayHello(helloTo) {
-    var span = tracer.startSpan('say-hello');
-    span.setTag('hello-to', helloTo);
+const sayHello = helloTo => {
+  const span = tracer.startSpan("say-hello");
+  const ctx = { span };
+  span.setTag("hello-to", helloTo);
+  const helloStr = formatString(ctx, helloTo);
+  printHello(ctx, helloStr);
+  span.finish();
+};
 
-    var helloStr = format_string(helloTo, span);
-    
-    print_string(helloStr, span);
-    
-    span.finish();
+const formatString = (ctx, helloTo) => {
+  ctx = {
+    span: tracer.startSpan("formatString", { childOf: ctx.span }),
+  };
+  const helloStr = `Hello, ${helloTo}!`;
+  ctx.span.log({
+    event: "string-format",
+    value: helloStr,
+  });
+  ctx.span.finish();
+  return helloStr;
+};
 
-    return helloStr;
-}  
+const printHello = (ctx, helloStr) => {
+  ctx = {
+    span: tracer.startSpan("printHello", { childOf: ctx.span }),
+  };
+  console.log(helloStr);
+  ctx.span.log({ event: "print-string" });
+  ctx.span.finish();
+};
 
-function format_string(helloTo, root_span) {
-    var span = tracer.startSpan('format_string', {childOf: root_span.context()});
-    var formattedStr = `Hello, ${helloTo}!`;
-
-    span.log({
-        'event': 'format-string',
-        'value': helloTo
-    });
-
-    span.finish();    
-    return formattedStr;
-}
-
-function print_string(helloStr, root_span) {
-    var span = tracer.startSpan('print_string', {childOf: root_span.context()});
-
-    console.log(helloStr);
-
-    span.log({
-        'event': 'print-string',
-        'value': helloStr
-    });
-    span.finish();
-}
-  
-assert.ok(process.argv.length == 3, 'expecting one argument');
-
+assert(process.argv.length == 3, "Expecting one argument");
 const helloTo = process.argv[2];
-
-const tracer = initTracer('hello-world');
 
 sayHello(helloTo);
 
-setTimeout( e => {tracer.close();}, 12000);
+tracer.close(() => process.exit());
