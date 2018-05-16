@@ -30,7 +30,6 @@ public class Hello {
         }
         String helloTo = args[0];
         new Hello().sayHello(helloTo);
-        tracer.close();
     }
 }
 ```
