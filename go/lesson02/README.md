@@ -91,9 +91,9 @@ span started in `main()`. We can do that by passing an additional option to the 
 function:
 
 ```go
-    span = rootSpan.Tracer().StartSpan(
+    span := rootSpan.Tracer().StartSpan(
         "formatString",
-        opentracing.ChildOf(span.Context()),
+        opentracing.ChildOf(rootSpan.Context()),
     )
 ```
 
