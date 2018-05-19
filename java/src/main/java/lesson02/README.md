@@ -134,7 +134,7 @@ private void sayHello(String helloTo) {
 }
 
 private  String formatString(String helloTo) {
-    try (Scope scope = tracer.buildSpan("formatString").startActive()) {
+    try (Scope scope = tracer.buildSpan("formatString").startActive(true)) {
         String helloStr = String.format("Hello, %s!", helloTo);
         scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
@@ -142,7 +142,7 @@ private  String formatString(String helloTo) {
 }
 
 private void printHello(String helloStr) {
-    try (Scope scope = tracer.buildSpan("printHello").startActive()) {
+    try (Scope scope = tracer.buildSpan("printHello").startActive(true)) {
         System.out.println(helloStr);
         scope.span().log(ImmutableMap.of("event", "println"));
     }
