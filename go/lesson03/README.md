@@ -81,7 +81,17 @@ The tracing instrumentation uses `Inject` and `Extract` to pass the span context
 ### Instrumenting the Client
 
 In the `formatString` function we already create a child span. In order to pass its context over the HTTP
-request we need to call `Inject` on the tracer:
+request we need to do the following:
+
+#### Add an import
+
+```go
+import (
+    "github.com/opentracing/opentracing-go/ext"
+)
+```
+
+#### Call `Inject` on the tracer
 
 ```go
 ext.SpanKindRPCClient.Set(span)

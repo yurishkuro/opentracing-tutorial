@@ -39,10 +39,12 @@ func formatString(ctx context.Context, helloTo string) string {
 
 	v := url.Values{}
 	v.Set("helloTo", helloTo)
-	req, err := http.NewRequest("GET", "http://localhost:8081/format?"+v.Encode(), nil)
+	url := "http://localhost:8081/format?" + v.Encode()
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		panic(err.Error())
 	}
+
 	resp, err := xhttp.Do(req)
 	if err != nil {
 		panic(err.Error())
@@ -64,10 +66,12 @@ func printHello(ctx context.Context, helloStr string) {
 
 	v := url.Values{}
 	v.Set("helloStr", helloStr)
-	req, err := http.NewRequest("GET", "http://localhost:8082/publish?"+v.Encode(), nil)
+	url := "http://localhost:8082/publish?" + v.Encode()
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		panic(err.Error())
 	}
+
 	if _, err := xhttp.Do(req); err != nil {
 		panic(err.Error())
 	}
