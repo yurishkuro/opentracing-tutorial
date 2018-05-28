@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jaeger" Version="0.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.1" />
+    <PackageReference Include="Jaeger" Version="0.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.2" />
   </ItemGroup>
 
 </Project>

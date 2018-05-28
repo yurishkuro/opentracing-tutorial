@@ -119,9 +119,9 @@ request we need to call `_tracer.Inject` before building the HTTP request:
 
 ```csharp
 var span = scope.Span
-    .SetTag("span.kind", "client")  // or: Tags.SpanKind.Set(span, Tags.SpanKindClient);
-    .SetTag("http.method", "GET")   // or: Tags.HttpMethod.Set(span, "GET");
-    .SetTag("http.url", url);       // or: Tags.HttpUrl.Set(span, url);
+    .SetTag("span.kind", "client")  // or: .SetTag(Tags.SpanKind, Tags.SpanKindClient);
+    .SetTag("http.method", "GET")   // or: .SetTag(Tags.HttpMethod, "GET");
+    .SetTag("http.url", url);       // or: .SetTag(Tags.HttpUrl, url);
 
 var dictionary = new Dictionary<string, string>();
 _tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new TextMapInjectAdapter(dictionary));
@@ -154,21 +154,6 @@ public void ConfigureServices(IServiceCollection services)
     services.AddMvc();
 
     services.AddSingleton<ITracer, Tracer>(t => Tracer);
-}
-```
-
-And dispose of it during application shutdown:
-
-```csharp
-public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
-{
-    if (env.IsDevelopment())
-    {
-        app.UseDeveloperExceptionPage();
-    }
-
-    applicationLifetime.ApplicationStopping.Register(Tracer.Dispose);
-    app.UseMvc();
 }
 ```
 
@@ -208,7 +193,7 @@ public static IScope StartServerSpan(ITracer tracer, IDictionary<string, string>
     }
 
     // TODO could add more tags like http.url
-    return spanBuilder.WithTag(Tags.SpanKind.Key, Tags.SpanKindServer).StartActive(true);
+    return spanBuilder.WithTag(Tags.SpanKind, Tags.SpanKindServer).StartActive(true);
 }
 ```
 
@@ -243,110 +228,40 @@ Then run `Lesson03.Exercise.Client` in the terminal. You should see an output li
 Server output (ASP.NET Core Web Server):
 
 ```powershell
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-        ...
-    },
-    ...
-    "References": [
-        {
-        "Type": "child_of",
-        "Context": {
-            "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-            ...
-            }
-        }
-    ],
-    ...
-}
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-        ...
-    },
-    ...
-    "References": [
-        {
-        "Type": "child_of",
-        "Context": {
-            "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-            ...
-            }
-        }
-    ],
-    ...
-}
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-        ...
-    },
-    ...
-    "References": [
-        {
-        "Type": "child_of",
-        "Context": {
-            "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-            ...
-            }
-        }
-    ],
-    ...
-}
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-        ...
-    },
-    ...
-}
+$ dotnet run
+info: Jaeger.Configuration[0]
+      Initialized Jaeger.Tracer
+Hosting environment: Development
+Content root path: opentracing-tutorial\csharp\src\lesson03\example\Lesson03.Example.Server
+Now listening on: http://localhost:8081
+Application started. Press Ctrl+C to shut down.
+info: Jaeger.Reporters.LoggingReporter[0]
+      Span reported: 722582a9299820e258eee39b348263cc:1924ee38b5e4b7c3:52a7512a6a2d7ccc:1 - format-controller
+info: Jaeger.Reporters.LoggingReporter[0]
+      Span reported: 722582a9299820e258eee39b348263cc:291f14c7a20258ba:52a7512a6a2d7ccc:1 - Result ObjectResult
+info: Jaeger.Reporters.LoggingReporter[0]
+      Span reported: 722582a9299820e258eee39b348263cc:52a7512a6a2d7ccc:1e05b0ca172ad56e:1 - Action OpenTracing.Tutorial.Lesson03.Example.Server.Controllers.FormatController/Get
+info: Jaeger.Reporters.LoggingReporter[0]
+      Span reported: 722582a9299820e258eee39b348263cc:1e05b0ca172ad56e:92ffe8a50d62d2e:1 - HTTP GET
 ```
 
 Client terminal output:
 
 ```powershell
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-        ...
-    },
-    ...
-}
-Hello, Bryan!
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-        ...
-    },
-    ...
-}
-
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 15765884733735375433, "Low": 8792954367037605704 },
-        ...
-    },
-    ...
-}
+$ dotnet run Bryan
+info: Jaeger.Configuration[0]
+      Initialized Jaeger.Tracer
+info: Jaeger.Reporters.LoggingReporter[0]
+      Span reported: 722582a9299820e258eee39b348263cc:92ffe8a50d62d2e:58eee39b348263cc:1 - format-string
+info: OpenTracing.Tutorial.Lesson03.Example.Client.Hello[0]
+      Hello, Bryan!
+info: Jaeger.Reporters.LoggingReporter[0]
+      Span reported: 722582a9299820e258eee39b348263cc:2dc30af91f18b434:58eee39b348263cc:1 - print-hello
+info: Jaeger.Reporters.LoggingReporter[0]
+      Span reported: 722582a9299820e258eee39b348263cc:58eee39b348263cc:0:1 - say-hello
 ```
 
-Note how all recorded spans show the same trace ID
-`{ "High": 15765884733735375433, "Low": 8792954367037605704, "IsValid": true }`.
+Note how all recorded spans show the same trace ID `722582a9299820e258eee39b348263cc`.
 This is a sign of correct instrumentation. It is also a very useful debugging approach when something
 is wrong with tracing. A typical error is to miss the context propagation somwehere,
 either in-process or inter-process, which results in different trace IDs and broken

@@ -39,7 +39,7 @@ private static string FormatString(ISpan span, string helloTo)
 
 private static void PrintHello(ISpan span, string helloString)
 {
-    Console.WriteLine(helloString);
+    _logger.LogInformation(helloString);
     span.Log("WriteLine");
 }
 ```
@@ -73,7 +73,7 @@ private void PrintHello(ISpan rootSpan, string helloString)
     var span = _tracer.BuildSpan("print-hello").Start();
     try
     {
-        Console.WriteLine(helloString);
+        _logger.LogInformation(helloString);
         span.Log("WriteLine");
     }
     finally
@@ -87,42 +87,20 @@ Let's run it:
 
 ```powershell
 $ dotnet run Bryan
-
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 4353438848052479496, "Low": 8059970555673150305 },
-        ...
-    },
-    "References": [],
-    ...
-}
-Hello, Bryan!
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 2134861473790156628, "Low": 4422115797691393275 },
-        ...
-    },
-    "References": [],
-    ...
-}
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 12550591731891114008, "Low": 14472260298413271319 },
-        ...
-    },
-    "References": [],
-    ...
-}
+info: Jaeger.Configuration[0]
+	Initialized Jaeger.Tracer
+info: Jaeger.Reporters.LoggingReporter[0]
+	Span reported: ed28347a2bcbdc22a6ee257a6886ec06:a6ee257a6886ec06:0:1 - format-string
+info: OpenTracing.Tutorial.Lesson02.Example.HelloManual[0]
+	Hello, Bryan!
+info: Jaeger.Reporters.LoggingReporter[0]
+	Span reported: 197df917bb6ba786e2ae4d2ceb203a32:e2ae4d2ceb203a32:0:1 - print-hello
+info: Jaeger.Reporters.LoggingReporter[0]
+	Span reported: e819293f8b4bfad0383c2d2a1748d94b:383c2d2a1748d94b:0:1 - say-hello
 ```
 
-We got three spans, but there is a problem here. The output for each span shows the Jaeger trace ID, yet they 
-are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single 
+We got three spans, but there is a problem here. The first hexadecimal segment of the output represents Jaeger trace ID, yet 
+they are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single 
 span. That's not what we wanted!
 
 What we really wanted was to establish causal relationship between the two new spans to the root
@@ -148,57 +126,20 @@ all reported spans now belong to the same trace:
 
 ```powershell
 $ dotnet run Bryan
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
-        ...
-    },
-    "References": [
-        {
-        "Type": "child_of",
-        "Context": {
-            "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
-            ...
-            }
-        }
-    ],
-    ...
-}
-Hello, Bryan!
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
-        ...
-    },
-    "References": [
-        {
-        "Type": "child_of",
-        "Context": {
-            "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
-            ...
-            }
-        }
-    ],
-    ...
-}
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": { "High": 10551131348252046144, "Low": 4395131861836039341 },
-        ...
-    },
-    "References": [],
-    ...
-}
+info: Jaeger.Configuration[0]
+	Initialized Jaeger.Tracer
+info: Jaeger.Reporters.LoggingReporter[0]
+	Span reported: 552d33bedc38352495c0005387282f8d:d73844b011fc061f:95c0005387282f8d:1 - format-string
+info: OpenTracing.Tutorial.Lesson02.Example.HelloManual[0]
+	Hello, Bryan!
+info: Jaeger.Reporters.LoggingReporter[0]
+	Span reported: 552d33bedc38352495c0005387282f8d:84c18290556a28bb:95c0005387282f8d:1 - print-hello
+info: Jaeger.Reporters.LoggingReporter[0]
+	Span reported: 552d33bedc38352495c0005387282f8d:95c0005387282f8d:0:1 - say-hello
 ```
 
-We can also see for the first two reported spans the `References` array contains references of type `child_of` 
-with the ID of the root span. The root span is reported last because it is the last one to finish.
+We can also see that instead of `0` in the 3rd position, the first two reported spans display `95c0005387282f8d`, 
+with is the ID of the root span. The root span is reported last because it is the last one to finish.
 
 If we find this trace in the UI, it will show a proper parent-child relationship between the spans.
 
@@ -232,7 +173,7 @@ private void PrintHello(string helloString)
 {
     using (var scope = _tracer.BuildSpan("print-hello").StartActive(true))
     {
-        Console.WriteLine(helloString);
+        _logger.LogInformation(helloString);
         scope.Span.Log(new Dictionary<string, object>
         {
             [LogFields.Event] = "WriteLine"
