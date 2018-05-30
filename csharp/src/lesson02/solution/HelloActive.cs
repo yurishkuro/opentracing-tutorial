@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using OpenTracing.Tutorial.Library;
 
 namespace OpenTracing.Tutorial.Lesson02.Solution
@@ -7,10 +8,12 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
     internal class HelloActive
     {
         private readonly ITracer _tracer;
+        private readonly ILogger<HelloActive> _logger;
 
-        public HelloActive(ITracer tracer)
+        public HelloActive(ITracer tracer, ILoggerFactory loggerFactory)
         {
             _tracer = tracer;
+            _logger = loggerFactory.CreateLogger<HelloActive>();
         }
 
         private string FormatString(string helloTo)
@@ -31,7 +34,7 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
         {
             using (var scope = _tracer.BuildSpan("print-hello").StartActive(true))
             {
-                Console.WriteLine(helloString);
+                _logger.LogInformation(helloString);
                 scope.Span.Log("WriteLine");
             }
         }
@@ -46,18 +49,21 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
             }
         }
 
-        public static void Main(string[] args)
-        {
-            if (args.Length != 1)
-            {
-                throw new ArgumentException("Expecting one argument");
-            }
+        //public static void Main(string[] args)
+        //{
+        //    if (args.Length != 1)
+        //    {
+        //        throw new ArgumentException("Expecting one argument");
+        //    }
 
-            var helloTo = args[0];
-            using (var tracer = Tracing.Init("hello-world"))
-            {
-                new HelloActive(tracer).SayHello(helloTo);
-            }
-        }
+        //    using (var loggerFactory = new LoggerFactory().AddConsole())
+        //    {
+        //        var helloTo = args[0];
+        //        using (var tracer = Tracing.Init("hello-world", loggerFactory))
+        //        {
+        //            new HelloActive(tracer, loggerFactory).SayHello(helloTo);
+        //        }
+        //    }
+        //}
     }
 }

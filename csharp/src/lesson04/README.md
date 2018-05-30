@@ -32,12 +32,15 @@ public static void Main(string[] args)
         throw new ArgumentException("Expecting two arguments, helloTo and greeting");
     }
 
-    var helloTo = args[0];
-    var greeting = args[1];
-    using (var tracer = Tracing.Init("say-hello"))
-    {
-        new Hello(tracer).SayHello(helloTo, greeting);
-    }
+	using (var loggerFactory = new LoggerFactory().AddConsole())
+	{
+		var helloTo = args[0];
+		var greeting = args[1];
+		using (var tracer = Tracing.Init("hello-world", loggerFactory))
+		{
+			new Hello(tracer, loggerFactory).SayHello(helloTo, greeting);
+		}
+	}
 }
 ```
 
@@ -70,7 +73,8 @@ $ dotnet run
 # client
 $ dotnet run Bryan Bonjour
 ...
-Bonjour, Bryan!
+info: OpenTracing.Tutorial.Lesson04.Example.Client.Hello[0]
+      Bonjour, Bryan!
 ...
 ```
 

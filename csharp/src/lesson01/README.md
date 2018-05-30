@@ -101,40 +101,103 @@ We are using the following basic features of the OpenTracing API:
 However, if we run this program, we will see no difference, and no traces in the tracing UI.
 That's because the `GlobalTracer.Instance` returns a no-op tracer by default.
 
+### Use `Microsoft.Extensions.Logging` for output
+
+In the first draft, we used `Console.WriteLine` for the output. This works very well if there is no multi-threading. 
+As soon as it gets more complex, our output could become unreadable if different sources write to our console at the same time.
+
+Microsoft offers a framework for logging which has it's main target in the ASP.NET world, but also works fine with normal applications. 
+You can find it as NuGet package `Microsoft.Extensions.Logging` which is already added to our project.
+
+We need to create an `ILoggerFactory` instance in our `Main` method. `new LoggerFactory().AddConsole()` will create one that uses 
+the `Console` as logging destination.
+
+An `ILogger` instance can then be used for logging to that destination. `loggerFactory.CreateLogger<Hello>()` creates one that 
+logs to our logging destination, using the `Hello` class as identifier. We store that in `_logger` for later usage.
+
+`Console.WriteLine` can then be replaced by `_logger.LogInformation` which creates an information log.
+
+```csharp
+using System;
+
+namespace OpenTracing.Tutorial.Lesson01.Exercise
+{
+    internal class Hello
+    {
+		...
+        private readonly ILogger<Hello> _logger;
+
+        public Hello(ITracer tracer, ILoggerFactory loggerFactory)
+        {
+            ...
+            _logger = loggerFactory.CreateLogger<Hello>();
+        }
+
+        public void SayHello(string helloTo)
+        {
+            ...
+            _logger.LogInformation(helloString);
+            span.Log("WriteLine");
+            span.Finish();
+        }
+
+        public static void Main(string[] args)
+        {
+            ...
+
+            using (var loggerFactory = new LoggerFactory().AddConsole())
+            {
+                var helloTo = args[0];
+                new Hello(GlobalTracer.Instance, loggerFactory).SayHello(helloTo);
+            }
+        }
+    }
+}
+```
+
+Run it:
+```powershell
+$ dotnet run Bryan
+info: OpenTracing.Tutorial.Lesson01.Example.Hello[0]
+	Hello, Bryan!
+```
+
 ### Initialize a real tracer
 
 Let's create an instance of a real tracer, such as Jaeger (https://github.com/jaegertracing/jaeger-client-csharp).
 
 First let's define a helper function that will create a tracer.
 
-(TODO: This has to use the Configuration helper once Jaeger 0.0.10 is released!)
-
 ```csharp
-using Jaeger.Core;
-using Jaeger.Core.Reporters;
-using Jaeger.Transport.Thrift.Transport;
+using Jaeger;
+using Jaeger.Samplers;
+using Microsoft.Extensions.Logging;
 
-private static Tracer InitTracer(string serviceName)
+private static Tracer InitTracer(string serviceName, ILoggerFactory loggerFactory)
 {
-    var loggerFactory = new LoggerFactory().AddConsole();
-    var loggingReporter = new LoggingReporter(loggerFactory);
-    var remoteReporter = new RemoteReporter.Builder(new JaegerUdpTransport())
-        .WithLoggerFactory(loggerFactory)
-        .Build();
+    var samplerConfiguration = new Configuration.SamplerConfiguration(loggerFactory)
+        .WithType(ConstSampler.Type)
+        .WithParam(1);
 
-    return new Tracer.Builder(serviceName)
-        .WithLoggerFactory(loggerFactory)
-        .WithReporter(new CompositeReporter(loggingReporter, remoteReporter))
-        .Build();
+    var reporterConfiguration = new Configuration.ReporterConfiguration(loggerFactory)
+        .WithLogSpans(true);
+
+    return (Tracer)new Configuration(serviceName, loggerFactory)
+        .WithSampler(samplerConfiguration)
+        .WithReporter(reporterConfiguration)
+        .GetTracer();
 }
 ```
+
+The Jaeger framework also uses the logging framework of our previous example, so we can just use the `ILoggerFactory` that 
+we created earlier.
 
 To use this instance, let's change the main function:
 
 ```csharp
-using (var tracer = InitTracer("hello-world"))
+using (var tracer = InitTracer("hello-world", loggerFactory))
 {
-    new Hello(tracer).SayHello(helloTo);
+    new Hello(tracer, loggerFactory).SayHello(helloTo);
 }
 ```
 
@@ -145,31 +208,12 @@ If we run the program now, we should see a span logged:
 
 ```powershell
 $ dotnet run Bryan
-Hello, Bryan!
-info: Jaeger.Core.Reporters.LoggingReporter[0]
-Reporting span:
-{
-    "Context": {
-        "TraceId": {
-            "High": 11193910068750926516,
-            "Low": 1595153065594434051,
-            "IsValid": true
-        },
-        "SpanId": {},
-        "ParentId": {},
-        "Flags": 1,
-        "IsSampled": true
-    },
-    "FinishTimestampUtc": "2018-04-16T13:29:17.7489041Z"
-    "Logs": [],
-    "OperationName": "say-hello",
-    "References": [],
-    "StartTimestampUtc": "2018-04-16T13:29:17.7458831Z",
-    "Tags": {
-        "sampler.type": "const",
-        "sampler.param": true
-    }
-}
+info: Jaeger.Configuration[0]
+	Initialized Jaeger.Tracer
+info: OpenTracing.Tutorial.Lesson01.Example.Hello[0]
+	Hello, Bryan!
+info: Jaeger.Reporters.LoggingReporter[0]
+	Span reported: ae1baaa10cf3f6dcde151ba025a76ea4:de151ba025a76ea4:0:1 - say-hello
 ```
 
 If you have the Jaeger backend running, you should be able to see the trace in the UI.
@@ -225,7 +269,7 @@ span.Log(new Dictionary<string, object>
         ["value"] = helloString
     }
 );
-Console.WriteLine(helloString);
+_logger.LogInformation(helloString);
 span.Log("WriteLine");
 ```
 

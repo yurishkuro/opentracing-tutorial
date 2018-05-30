@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Jaeger.Core;
-using Jaeger.Core.Reporters;
-using Jaeger.Transport.Thrift.Transport;
 using Microsoft.Extensions.Logging;
+using OpenTracing.Tutorial.Library;
 
 namespace OpenTracing.Tutorial.Lesson01.Exercise
 {

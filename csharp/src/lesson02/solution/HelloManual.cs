@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using OpenTracing.Tutorial.Library;
 
 namespace OpenTracing.Tutorial.Lesson02.Solution
@@ -7,10 +8,12 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
     internal class HelloManual
     {
         private readonly ITracer _tracer;
+        private readonly ILogger<HelloManual> _logger;
 
-        public HelloManual(ITracer tracer)
+        public HelloManual(ITracer tracer, ILoggerFactory loggerFactory)
         {
             _tracer = tracer;
+            _logger = loggerFactory.CreateLogger<HelloManual>();
         }
 
         private string FormatString(ISpan rootSpan, string helloTo)
@@ -37,7 +40,7 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
             var span = _tracer.BuildSpan("print-hello").AsChildOf(rootSpan).Start();
             try
             {
-                Console.WriteLine(helloString);
+                _logger.LogInformation(helloString);
                 span.Log("WriteLine");
             }
             finally
@@ -55,18 +58,21 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
             span.Finish();
         }
 
-        //public static void Main(string[] args)
-        //{
-        //    if (args.Length != 1)
-        //    {
-        //        throw new ArgumentException("Expecting one argument");
-        //    }
+        public static void Main(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Expecting one argument");
+            }
 
-        //    var helloTo = args[0];
-        //    using (var tracer = Tracing.Init("hello-world"))
-        //    {
-        //        new HelloManual(tracer).SayHello(helloTo);
-        //    }
-        //}
+            using (var loggerFactory = new LoggerFactory().AddConsole())
+            {
+                var helloTo = args[0];
+                using (var tracer = Tracing.Init("hello-world", loggerFactory))
+                {
+                    new HelloManual(tracer, loggerFactory).SayHello(helloTo);
+                }
+            }
+        }
     }
 }

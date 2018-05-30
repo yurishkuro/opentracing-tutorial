@@ -1,28 +1,24 @@
-using Jaeger.Core;
-using Jaeger.Core.Reporters;
-using Jaeger.Transport.Thrift.Transport;
+using Jaeger;
+using Jaeger.Samplers;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Propagation;
-using OpenTracing.Tag;
-using System;
-using System.Collections.Generic;
 
 namespace OpenTracing.Tutorial.Library
 {
     public static class Tracing
     {
-        public static Tracer Init(string serviceName)
+        public static Tracer Init(string serviceName, ILoggerFactory loggerFactory)
         {
-            var loggerFactory = new LoggerFactory().AddConsole();
-            var loggingReporter = new LoggingReporter(loggerFactory);
-            var remoteReporter = new RemoteReporter.Builder(new JaegerUdpTransport())
-                .WithLoggerFactory(loggerFactory)
-                .Build();
+            var samplerConfiguration = new Configuration.SamplerConfiguration(loggerFactory)
+                .WithType(ConstSampler.Type)
+                .WithParam(1);
 
-            return new Tracer.Builder(serviceName)
-                .WithLoggerFactory(loggerFactory)
-                .WithReporter(new CompositeReporter(loggingReporter, remoteReporter))
-                .Build();
+            var reporterConfiguration = new Configuration.ReporterConfiguration(loggerFactory)
+                .WithLogSpans(true);
+
+            return (Tracer)new Configuration(serviceName, loggerFactory)
+                .WithSampler(samplerConfiguration)
+                .WithReporter(reporterConfiguration)
+                .GetTracer();
         }
     }
 }
