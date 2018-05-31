@@ -46,61 +46,6 @@ $ dotnet run Bryan
 Hello, Bryan!
 ```
 
-### Create a trace
-
-A trace is a directed acyclic graph of spans. A span is a logical representation of some work done in your application.
-Each span has these minimum attributes: an operation name, a start time, and a finish time.
-
-Let's create a trace that consists of just a single span. To do that we need an instance of the `OpenTracing.ITracer`.
-We can use a global instance returned by `OpenTracing.Util.GlobalTracer.Instance`.
-
-```csharp
-using System;
-using OpenTracing.Util;
-
-namespace OpenTracing.Tutorial.Lesson01.Exercise
-{
-    internal class Hello
-    {
-        private readonly ITracer _tracer;
-
-        public Hello(OpenTracing.ITracer tracer)
-        {
-            _tracer = tracer;
-        }
-
-        public void SayHello(string helloTo)
-        {
-            var span = _tracer.BuildSpan("say-hello").Start();
-            var helloString = $"Hello, {helloTo}!";
-            Console.WriteLine(helloString);
-            span.Finish();
-        }
-
-        public static void Main(string[] args)
-        {
-            if (args.Length != 1)
-            {
-                throw new ArgumentException("Expecting one argument");
-            }
-
-            var helloTo = args[0];
-            new Hello(GlobalTracer.Instance).SayHello(helloTo);
-        }
-    }
-}
-```
-
-We are using the following basic features of the OpenTracing API:
-  * a `ITracer` instance is used to create a span builder via `BuildSpan()`
-  * each `ISpan` is given an _operation name_, `"say-hello"` in this case
-  * builder is used to create a span via `Start()`
-  * each `ISpan` must be finished by calling its `Finish()` function
-  * the start and end timestamps of the span will be captured automatically by the tracer implementation
-
-However, if we run this program, we will see no difference, and no traces in the tracing UI.
-That's because the `GlobalTracer.Instance` returns a no-op tracer by default.
-
 ### Use `Microsoft.Extensions.Logging` for output
 
 In the first draft, we used `Console.WriteLine` for the output. This works very well if there is no multi-threading. 
@@ -119,36 +64,36 @@ logs to our logging destination, using the `Hello` class as identifier. We store
 
 ```csharp
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace OpenTracing.Tutorial.Lesson01.Exercise
 {
     internal class Hello
     {
-		...
         private readonly ILogger<Hello> _logger;
 
-        public Hello(ITracer tracer, ILoggerFactory loggerFactory)
+        public Hello(ILoggerFactory loggerFactory)
         {
-            ...
             _logger = loggerFactory.CreateLogger<Hello>();
         }
 
         public void SayHello(string helloTo)
         {
-            ...
+            var helloString = $"Hello, {helloTo}!";
             _logger.LogInformation(helloString);
-            span.Log("WriteLine");
-            span.Finish();
         }
 
         public static void Main(string[] args)
         {
-            ...
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Expecting one argument");
+            }
 
             using (var loggerFactory = new LoggerFactory().AddConsole())
             {
                 var helloTo = args[0];
-                new Hello(GlobalTracer.Instance, loggerFactory).SayHello(helloTo);
+                new Hello(loggerFactory).SayHello(helloTo);
             }
         }
     }
@@ -161,6 +106,67 @@ $ dotnet run Bryan
 info: OpenTracing.Tutorial.Lesson01.Example.Hello[0]
 	Hello, Bryan!
 ```
+
+### Create a trace
+
+A trace is a directed acyclic graph of spans. A span is a logical representation of some work done in your application.
+Each span has these minimum attributes: an operation name, a start time, and a finish time.
+
+Let's create a trace that consists of just a single span. To do that we need an instance of the `OpenTracing.ITracer`.
+We can use a global instance returned by `OpenTracing.Util.GlobalTracer.Instance`.
+
+```csharp
+using System;
+using Microsoft.Extensions.Logging;
+using OpenTracing.Util;
+
+namespace OpenTracing.Tutorial.Lesson01.Exercise
+{
+    internal class Hello
+    {
+        private readonly ITracer _tracer;
+        private readonly ILogger<Hello> _logger;
+
+        public Hello(OpenTracing.ITracer tracer, ILoggerFactory loggerFactory)
+        {
+            _tracer = tracer;
+            _logger = loggerFactory.CreateLogger<Hello>();
+        }
+
+        public void SayHello(string helloTo)
+        {
+            var span = _tracer.BuildSpan("say-hello").Start();
+            var helloString = $"Hello, {helloTo}!";
+            _logger.LogInformation(helloString);
+            span.Finish();
+        }
+
+        public static void Main(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Expecting one argument");
+            }
+
+            using (var loggerFactory = new LoggerFactory().AddConsole())
+            {
+                var helloTo = args[0];
+                new Hello(GlobalTracer.Instance, loggerFactory).SayHello(helloTo);
+            }
+        }
+    }
+}
+```
+
+We are using the following basic features of the OpenTracing API:
+  * a `ITracer` instance is used to create a span builder via `BuildSpan()`
+  * each `ISpan` is given an _operation name_, `"say-hello"` in this case
+  * builder is used to create a span via `Start()`
+  * each `ISpan` must be finished by calling its `Finish()` function
+  * the start and end timestamps of the span will be captured automatically by the tracer implementation
+
+However, if we run this program, we will see no difference, and no traces in the tracing UI.
+That's because the `GlobalTracer.Instance` returns a no-op tracer by default.
 
 ### Initialize a real tracer
 
