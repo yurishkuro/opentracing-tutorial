@@ -14,7 +14,7 @@ Learn how to:
 
 For this lesson we are going to need a client and server component. To get started, please create
 a command line project, similar to the previous lessons. Additionally, create a "ASP .NET Core Web Application"
-with the "API" template. Make sure to add the reference to our `OpenTracing.Tutorial.Library` library to both projects. and
+with the "API" template (`dotnet new webapi`). Make sure to add the reference to our `OpenTracing.Tutorial.Library` library to both projects and
 copy the `HelloActive.cs` file from the previous lesson into the client solution replacing the automatically
 created `Program.cs`. Make some slight changes to have the App call the API instead of doing the string formatting
 work locally:
@@ -67,11 +67,11 @@ namespace OpenTracing.Tutorial.Lesson03.Exercise.Server.Controllers
             return "Hello!";
         }
 
-        // GET: api/format/helloString
-        [HttpGet("{helloString}", Name = "GetFormat")]
-        public string Get(string helloString)
+        // GET: api/format/helloTo
+        [HttpGet("{helloTo}", Name = "GetFormat")]
+        public string Get(string helloTo)
         {
-            var formattedHelloString = $"Hello, {helloString}!";
+            var formattedHelloString = $"Hello, {helloTo}!";
             return formattedHelloString;
         }
     }
@@ -119,9 +119,9 @@ request we need to call `_tracer.Inject` before building the HTTP request:
 
 ```csharp
 var span = scope.Span
-    .SetTag("span.kind", "client")  // or: .SetTag(Tags.SpanKind, Tags.SpanKindClient);
-    .SetTag("http.method", "GET")   // or: .SetTag(Tags.HttpMethod, "GET");
-    .SetTag("http.url", url);       // or: .SetTag(Tags.HttpUrl, url);
+    .SetTag(Tags.SpanKind, Tags.SpanKindClient);
+    .SetTag(Tags.HttpMethod, "GET");
+    .SetTag(Tags.HttpUrl, url);
 
 var dictionary = new Dictionary<string, string>();
 _tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new TextMapInjectAdapter(dictionary));
@@ -200,16 +200,16 @@ public static IScope StartServerSpan(ITracer tracer, IDictionary<string, string>
 The logic here is similar to the client side instrumentation, except that we are using `_tracer.Extract`
 and tagging the span as `span.kind=server`. We are extracting the headers via `TextMapExtractAdapter`.
 
-Now change the `/api/format/helloString` handler method to use `StartServerSpan`:
+Now change the `/api/format/helloTo` handler method to use `StartServerSpan`:
 
 ```csharp
-[HttpGet("{helloString}", Name = "GetFormat")]
-public string Get(string helloString)
+[HttpGet("{helloTo}", Name = "GetFormat")]
+public string Get(string helloTo)
 {
     var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
     using (var scope = StartServerSpan(_tracer, headers, "format-controller"))
     {
-        var formattedHelloString = $"Hello, {helloString}!";
+        var formattedHelloString = $"Hello, {helloTo}!";
         scope.Span.Log(new Dictionary<string, object>
         {
             [LogFields.Event] = "string-format",
@@ -236,13 +236,7 @@ Content root path: opentracing-tutorial\csharp\src\lesson03\example\Lesson03.Exa
 Now listening on: http://localhost:8081
 Application started. Press Ctrl+C to shut down.
 info: Jaeger.Reporters.LoggingReporter[0]
-      Span reported: 722582a9299820e258eee39b348263cc:1924ee38b5e4b7c3:52a7512a6a2d7ccc:1 - format-controller
-info: Jaeger.Reporters.LoggingReporter[0]
-      Span reported: 722582a9299820e258eee39b348263cc:291f14c7a20258ba:52a7512a6a2d7ccc:1 - Result ObjectResult
-info: Jaeger.Reporters.LoggingReporter[0]
-      Span reported: 722582a9299820e258eee39b348263cc:52a7512a6a2d7ccc:1e05b0ca172ad56e:1 - Action OpenTracing.Tutorial.Lesson03.Example.Server.Controllers.FormatController/Get
-info: Jaeger.Reporters.LoggingReporter[0]
-      Span reported: 722582a9299820e258eee39b348263cc:1e05b0ca172ad56e:92ffe8a50d62d2e:1 - HTTP GET
+      Span reported: 722582a9299820e258eee39b348263cc:1924ee38b5e4b7c3:92ffe8a50d62d2e:1 - format-controller
 ```
 
 Client terminal output:
@@ -302,9 +296,9 @@ this is always the case when using ASP.NET Core, this has not to be done manuall
 We can just use the span builder with the active span as we did on the client side.
 
 ```csharp
-// GET: api/format/helloString
-[HttpGet("{helloString}", Name = "GetFormat")]
-public string Get(string helloString)
+// GET: api/format/helloTo
+[HttpGet("{helloTo}", Name = "GetFormat")]
+public string Get(string helloTo)
 {
     using (var scope = _tracer.BuildSpan("format-controller").StartActive(true))
     {
