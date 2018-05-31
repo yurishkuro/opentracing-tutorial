@@ -49,21 +49,22 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
             }
         }
 
-        //public static void Main(string[] args)
-        //{
-        //    if (args.Length != 1)
-        //    {
-        //        throw new ArgumentException("Expecting one argument");
-        //    }
+		// TODO: Rename MainActive to Main to run it. Make sure that HelloManual.cs has MainManual instead of Main, otherwise it will not build!
+        public static void MainActive(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                throw new ArgumentException("Expecting one argument");
+            }
 
-        //    using (var loggerFactory = new LoggerFactory().AddConsole())
-        //    {
-        //        var helloTo = args[0];
-        //        using (var tracer = Tracing.Init("hello-world", loggerFactory))
-        //        {
-        //            new HelloActive(tracer, loggerFactory).SayHello(helloTo);
-        //        }
-        //    }
-        //}
+            using (var loggerFactory = new LoggerFactory().AddConsole())
+            {
+                var helloTo = args[0];
+                using (var tracer = Tracing.Init("hello-world", loggerFactory))
+                {
+                    new HelloActive(tracer, loggerFactory).SayHello(helloTo);
+                }
+            }
+        }
     }
 }

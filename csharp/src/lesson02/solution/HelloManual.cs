@@ -58,7 +58,8 @@ namespace OpenTracing.Tutorial.Lesson02.Solution
             span.Finish();
         }
 
-        public static void Main(string[] args)
+		// TODO: Rename MainManual to Main to run it. Make sure that HelloActive.cs has MainActive instead of Main, otherwise it will not build!
+        public static void MainManual(string[] args)
         {
             if (args.Length != 1)
             {
