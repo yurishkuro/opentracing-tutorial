@@ -16,6 +16,7 @@ Once the container starts, the Jaeger UI will be accessible at http://localhost:
 
 ## Tutorials by Language
 
+  * [C# tutorial](./csharp/)
   * [Go tutorial](./go/)
   * [Java tutorial](./java)
   * [Python tutorial](./python)

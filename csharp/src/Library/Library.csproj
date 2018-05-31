@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>OpenTracing.Tutorial.Library</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jaeger" Version="0.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.2" />
+  </ItemGroup>
+
+</Project>
