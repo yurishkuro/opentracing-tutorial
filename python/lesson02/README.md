@@ -124,7 +124,7 @@ as the first argument to each function. Unlike Go, languages like Java and Pytho
 storage, which is convenient for storing such request-scoped data like the current span. Unfortunately,
 unlike in Java, the OpenTracing API for Python currently does not expose a standard mechanism of accessing
 such thread-local storage (or its equivalents in async frameworks like `tornado` or `gevent`). The new
-API is curently a work in progress and should be avialable soon.
+API is curently a work in progress and should be available soon.
 
 For the purpose of this tutorial, we will use an alternative API available in module `opentracing_instrumentation`,
 which is already included in the `requirements.txt`. This modue provides an in-memory context propagation
