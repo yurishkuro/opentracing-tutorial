@@ -3,3 +3,4 @@ jaeger-client>=3.8,<4
 opentracing_instrumentation>=2.2,<3
 requests
 flask
+futures; python_version < "3"
