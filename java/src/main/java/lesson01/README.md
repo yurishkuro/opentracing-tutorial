@@ -64,7 +64,7 @@ public class Hello {
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
 
         String helloStr = String.format("Hello, %s!", helloTo);
         System.out.println(helloStr);
@@ -85,7 +85,7 @@ public class Hello {
 We are using the following basic features of the OpenTracing API:
   * a `tracer` instance is used to create a span builder via `buildSpan()`
   * each `span` is given an _operation name_, `"say-hello"` in this case
-  * builder is used to create a span via `startManual()`
+  * builder is used to create a span via `start()`
   * each `span` must be finished by calling its `finish()` function
   * the start and end timestamps of the span will be captured automatically by the tracer implementation
 
@@ -101,7 +101,7 @@ Our `pom.xml` already imports Jaeger:
 <dependency>
     <groupId>com.uber.jaeger</groupId>
     <artifactId>jaeger-core</artifactId>
-    <version>0.26.0</version>
+    <version>0.27.0</version>
 </dependency>
 ```
 
@@ -113,9 +113,9 @@ import com.uber.jaeger.Configuration.ReporterConfiguration;
 import com.uber.jaeger.Configuration.SamplerConfiguration;
 
 public static com.uber.jaeger.Tracer initTracer(String service) {
-    SamplerConfiguration samplerConfig = new SamplerConfiguration("const", 1);
-    ReporterConfiguration reporterConfig = new ReporterConfiguration(true, null, null, null, null);
-    Configuration config = new Configuration(service, samplerConfig, reporterConfig);
+    SamplerConfiguration samplerConfig = new SamplerConfiguration().withType("const").withParam(1);
+    ReporterConfiguration reporterConfig = new ReporterConfiguration().withLogSpans(true);
+    Configuration config = new Configuration(service).withSampler(samplerConfig).withReporter(reporterConfig);
     return (com.uber.jaeger.Tracer) config.getTracer();
 }
 ```
@@ -177,7 +177,7 @@ In the case of `Hello Bryan`, the string `"Bryan"` is a good candidate for a spa
 to the whole span and not to a particular moment in time. We can record it like this:
 
 ```java
-Span span = tracer.buildSpan("say-hello").startManual();
+Span span = tracer.buildSpan("say-hello").start();
 span.setTag("hello-to", helloTo);
 ```
 

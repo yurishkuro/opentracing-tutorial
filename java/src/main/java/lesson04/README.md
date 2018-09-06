@@ -36,9 +36,9 @@ public static void main(String[] args) {
     }
     String helloTo = args[0];
     String greeting = args[1];
-    Tracer tracer = Tracing.init("hello-world");
-    new Hello(tracer).sayHello(helloTo, greeting);
-    tracer.close();
+    try (Tracer tracer = Tracing.init("hello-world")) {
+        new Hello(tracer).sayHello(helloTo, greeting);
+    }
 }
 ```
 

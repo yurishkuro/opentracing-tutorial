@@ -42,7 +42,7 @@ Of course, this does not change the outcome. What we really want to do is to wra
 
 ```java
 private  String formatString(Span rootSpan, String helloTo) {
-    Span span = tracer.buildSpan("formatString").startManual();
+    Span span = tracer.buildSpan("formatString").start();
     try {
         String helloStr = String.format("Hello, %s!", helloTo);
         span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
@@ -53,7 +53,7 @@ private  String formatString(Span rootSpan, String helloTo) {
 }
 
 private void printHello(Span rootSpan, String helloStr) {
-    Span span = tracer.buildSpan("printHello").startManual();
+    Span span = tracer.buildSpan("printHello").start();
     try {
         System.out.println(helloStr);
         span.log(ImmutableMap.of("event", "println"));
@@ -81,7 +81,7 @@ What we really wanted was to establish causal relationship between the two new s
 span started in `main()`. We can do that by passing an additional option `asChildOf` to the span builder:
 
 ```java
-Span span = tracer.buildSpan("formatString").asChildOf(rootSpan).startManual();
+Span span = tracer.buildSpan("formatString").asChildOf(rootSpan).start();
 ```
 
 If we think of the trace as a directed acyclic graph where nodes are the spans and edges are
@@ -121,7 +121,7 @@ You may have noticed a few unpleasant side effects of our recent changes
   * we also had to write somewhat verbose try/finally code to finish the spans
 
 OpenTracing API for Java provides a better way. Using thread-locals and the notion of an "active span",
-we can avoid passing the span through our code and just access it via `tracer.
+we can avoid passing the span through our code and just access it via `tracer`.
 
 ```java
 private void sayHello(String helloTo) {
@@ -150,7 +150,7 @@ private void printHello(String helloStr) {
 ```
 
 In the above code we're making the following changes:
-  * We use `startActive()` method of the span builder instead of `startManual()`,
+  * We use `startActive()` method of the span builder instead of `start()`,
     which makes the span "active" by storing it in a thread-local storage.
   * `startActive()` returns a `Scope` object instead of a `Span`. Scope is a container of the currently
     active span. We access the active span via `scope.span()`. Once the scope is closed, the previous
