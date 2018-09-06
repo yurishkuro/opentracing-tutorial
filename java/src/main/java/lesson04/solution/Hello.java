@@ -77,8 +77,8 @@ public class Hello {
         }
         String helloTo = args[0];
         String greeting = args[1];
-        Tracer tracer = Tracing.init("hello-world");
-        new Hello(tracer).sayHello(helloTo, greeting);
-        tracer.close();
+        try (Tracer tracer = Tracing.init("hello-world")) {
+            new Hello(tracer).sayHello(helloTo, greeting);
+        }
     }
 }

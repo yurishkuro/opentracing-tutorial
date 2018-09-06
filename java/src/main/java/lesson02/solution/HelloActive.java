@@ -7,7 +7,7 @@ import io.opentracing.Scope;
 import lib.Tracing;
 
 public class HelloActive {
-    
+
     private final Tracer tracer;
 
     private HelloActive(Tracer tracer) {
@@ -17,7 +17,7 @@ public class HelloActive {
     private void sayHello(String helloTo) {
         try (Scope scope = tracer.buildSpan("say-hello").startActive(true)) {
             scope.span().setTag("hello-to", helloTo);
-            
+
             String helloStr = formatString(helloTo);
             printHello(helloStr);
         }
@@ -43,8 +43,8 @@ public class HelloActive {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
-        new HelloActive(tracer).sayHello(helloTo);
-        tracer.close();
+        try (Tracer tracer = Tracing.init("hello-world")) {
+            new HelloActive(tracer).sayHello(helloTo);
+        }
     }
 }
