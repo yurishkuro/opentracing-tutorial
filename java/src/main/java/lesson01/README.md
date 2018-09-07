@@ -101,7 +101,7 @@ Our `pom.xml` already imports Jaeger:
 ```xml
 <dependency>
     <groupId>io.jaegertracing</groupId>
-    <artifactId>jaeger-core</artifactId>
+    <artifactId>jaeger-thrift</artifactId>
     <version>0.31.0</version>
 </dependency>
 ```
