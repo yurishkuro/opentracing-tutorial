@@ -1,9 +1,9 @@
 package lesson02.solution;
 
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
 
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import lib.Tracing;
 
 public class HelloManual {
@@ -50,8 +50,7 @@ public class HelloManual {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-        try (Tracer tracer = Tracing.init("hello-world")) {
-            new HelloManual(tracer).sayHello(helloTo);
-        }
+        Tracer tracer = Tracing.init("hello-world");
+        new HelloManual(tracer).sayHello(helloTo);
     }
 }

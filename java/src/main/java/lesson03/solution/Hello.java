@@ -3,9 +3,9 @@ package lesson03.solution;
 import java.io.IOException;
 
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
 
 import io.opentracing.Scope;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import lib.Tracing;
@@ -75,8 +75,7 @@ public class Hello {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-        try (Tracer tracer = Tracing.init("hello-world")) {
-            new Hello(tracer).sayHello(helloTo);
-        }
+        Tracer tracer = Tracing.init("hello-world");
+        new Hello(tracer).sayHello(helloTo);
     }
 }

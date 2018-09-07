@@ -36,9 +36,8 @@ public static void main(String[] args) {
     }
     String helloTo = args[0];
     String greeting = args[1];
-    try (Tracer tracer = Tracing.init("hello-world")) {
-        new Hello(tracer).sayHello(helloTo, greeting);
-    }
+    Tracer tracer = Tracing.init("hello-world");
+    new Hello(tracer).sayHello(helloTo, greeting);
 }
 ```
 
@@ -72,7 +71,7 @@ with two arguments, e.g. `Bryan Bonjour`. The `publisher` should print `Bonjour,
 $ ./run.sh lesson04.exercise.Formatter server
 [skip noise]
 INFO org.eclipse.jetty.server.Server: Started @3508ms
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:cd2c1d243ddf319b:ef06ddba375ff053:1 - format
+INFO io.jaegertracing.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:cd2c1d243ddf319b:ef06ddba375ff053:1 - format
 127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 15 "-" "okhttp/3.9.0" 69
 
 # publisher
@@ -80,15 +79,15 @@ $ ./run.sh lesson04.exercise.Publisher server
 [skip noise]
 INFO org.eclipse.jetty.server.Server: Started @3388ms
 Bonjour, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:f46156fcd7d3abd3:20cdfed1d23892c1:1 - publish
+INFO io.jaegertracing.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:f46156fcd7d3abd3:20cdfed1d23892c1:1 - publish
 127.0.0.1 - - "GET /publish?helloStr=Bonjour,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 92
 
 # client
 $ ./run.sh lesson04.exercise.Hello Bryan Bonjour
-INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:ef06ddba375ff053:e6ee8a816c8386ce:1 - formatString
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:20cdfed1d23892c1:e6ee8a816c8386ce:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:e6ee8a816c8386ce:0:1 - say-hello
+INFO io.jaegertracing.Configuration - Initialized tracer=Tracer(...)
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:ef06ddba375ff053:e6ee8a816c8386ce:1 - formatString
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:20cdfed1d23892c1:e6ee8a816c8386ce:1 - printHello
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:e6ee8a816c8386ce:0:1 - say-hello
 ```
 
 ### What's the Big Deal?

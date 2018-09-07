@@ -67,10 +67,10 @@ Let's run it:
 
 ```
 $ ./run.sh lesson02.exercise.Hello Bryan
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 12c92a6604499c25:12c92a6604499c25:0:1 - formatString
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 12c92a6604499c25:12c92a6604499c25:0:1 - formatString
 Hello, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 14aaaf7a377e5147:14aaaf7a377e5147:0:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: a25cf88369793b9b:a25cf88369793b9b:0:1 - say-hello
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 14aaaf7a377e5147:14aaaf7a377e5147:0:1 - printHello
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: a25cf88369793b9b:a25cf88369793b9b:0:1 - say-hello
 ```
 
 We got three spans, but there is a problem here. The first hexadecimal segment of the output represents
@@ -100,10 +100,10 @@ spans now belong to the same trace:
 
 ```
 $ ./run.sh lesson02.exercise.Hello Bryan
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:42d38965612a195a:4ca67017b68d14c:1 - formatString
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:42d38965612a195a:4ca67017b68d14c:1 - formatString
 Hello, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:19af156b64c22d23:4ca67017b68d14c:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:4ca67017b68d14c:0:1 - say-hello
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:19af156b64c22d23:4ca67017b68d14c:1 - printHello
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:4ca67017b68d14c:0:1 - say-hello
 ```
 
 We can also see that instead of `0` in the 3rd position the first two reported spans display

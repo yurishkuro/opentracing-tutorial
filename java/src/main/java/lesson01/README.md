@@ -94,40 +94,41 @@ That's because the function `GlobalTracer.get()` returns a no-op tracer by defau
 
 ### Initialize a real tracer
 
-Let's create an instance of a real tracer, such as Jaeger (http://github.com/uber/jaeger-client-java).
+Let's create an instance of a real tracer, such as Jaeger (https://github.com/jaegertracing/jaeger-client-java).
 Our `pom.xml` already imports Jaeger:
 
 ```xml
 <dependency>
-    <groupId>com.uber.jaeger</groupId>
+    <groupId>io.jaegertracing</groupId>
     <artifactId>jaeger-core</artifactId>
-    <version>0.27.0</version>
+    <version>0.31.0</version>
 </dependency>
 ```
 
 First let's define a helper function that will create a tracer.
 
 ```java
-import com.uber.jaeger.Configuration;
-import com.uber.jaeger.Configuration.ReporterConfiguration;
-import com.uber.jaeger.Configuration.SamplerConfiguration;
+import io.jaegertracing.Configuration;
+import io.jaegertracing.Configuration.ReporterConfiguration;
+import io.jaegertracing.Configuration.SamplerConfiguration;
+import io.jaegertracing.internal.JaegerTracer;
 
-public static com.uber.jaeger.Tracer initTracer(String service) {
+public static JaegerTracer initTracer(String service) {
     SamplerConfiguration samplerConfig = new SamplerConfiguration().withType("const").withParam(1);
     ReporterConfiguration reporterConfig = new ReporterConfiguration().withLogSpans(true);
     Configuration config = new Configuration(service).withSampler(samplerConfig).withReporter(reporterConfig);
-    return (com.uber.jaeger.Tracer) config.getTracer();
+    return config.getTracer();
 }
 ```
 
 To use this instance, let's change the main function:
 
 ```java
-import com.uber.jaeger.Tracer;
+import io.jaegertracing.internal.JaegerTracer;
 
-Tracer tracer = initTracer("hello-world");
-new Hello(tracer).sayHello(helloTo);
-tracer.close();
+try (JaegerTracer tracer = initTracer("hello-world")) {
+    new Hello(tracer).sayHello(helloTo);
+}
 ```
 
 Note that we are passing a string `hello-world` to the init method. It is used to mark all spans emitted by
@@ -137,9 +138,9 @@ If we run the program now, we should see a span logged:
 
 ```
 $ ./run.sh lesson01.exercise.Hello Bryan
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+[lesson01.exercise.Hello.main()] INFO io.jaegertracing.Configuration - Initialized tracer=Tracer(...)
 Hello, Bryan!
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
+[lesson01.exercise.Hello.main()] INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
 ```
 
 If you have Jaeger backend running, you should be able to see the trace in the UI.
