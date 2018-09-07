@@ -53,13 +53,14 @@ We can use a global instance returned by `io.opentracing.util.GlobalTracer.get()
 
 ```java
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 
 public class Hello {
 
-    private final io.opentracing.Tracer tracer;
+    private final Tracer tracer;
 
-    private Hello(io.opentracing.Tracer tracer) {
+    private Hello(Tracer tracer) {
         this.tracer = tracer;
     }
 
@@ -124,11 +125,8 @@ public static JaegerTracer initTracer(String service) {
 To use this instance, let's change the main function:
 
 ```java
-import io.jaegertracing.internal.JaegerTracer;
-
-try (JaegerTracer tracer = initTracer("hello-world")) {
-    new Hello(tracer).sayHello(helloTo);
-}
+Tracer tracer = initTracer("hello-world");
+new Hello(tracer).sayHello(helloTo);
 ```
 
 Note that we are passing a string `hello-world` to the init method. It is used to mark all spans emitted by

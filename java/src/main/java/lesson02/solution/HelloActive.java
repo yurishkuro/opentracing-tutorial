@@ -2,7 +2,6 @@ package lesson02.solution;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import lib.Tracing;
