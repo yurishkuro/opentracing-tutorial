@@ -41,7 +41,7 @@
     <dependencies>
         <dependency>
             <groupId>io.jaegertracing</groupId>
-            <artifactId>jaeger-thrift</artifactId>
+            <artifactId>jaeger-client</artifactId>
             <version>${jaeger.version}</version>
         </dependency>
         <dependency>
