@@ -2,6 +2,7 @@ package lesson01.solution;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import lib.Tracing;
@@ -31,8 +32,10 @@ public class Hello {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expecting one argument");
         }
+
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
-        new Hello(tracer).sayHello(helloTo);
+        try (JaegerTracer tracer = Tracing.init("hello-world")) {
+            new Hello(tracer).sayHello(helloTo);
+        }
     }
 }
