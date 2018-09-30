@@ -83,7 +83,7 @@ INFO  Reporting span e0908f7e4104c7f9:e0908f7e4104c7f9:0:1
 
 We got three spans, but there is a problem here. The first hexadecimal segment of the output represents Jaeger trace ID, yet they are all different. If we search for those IDs in the UI each one will represent a standalone trace with a single span. That's not what we wanted!
 
-What we really wanted was to establish a causal relationship between the two new spans to the root span. We can do that by passing an additional option to the `startSpan` function:
+What we really wanted was to establish a causal relationship between the two new spans to the root span. We can do that by passing an additional option `childOf` to the `startSpan` function:
 
 ```javascript
 const formatString = (rootSpan, helloTo) => {
