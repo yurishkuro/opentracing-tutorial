@@ -7,23 +7,16 @@
 
 ### Walkthrough
 
-In Lesson 3 we have seen how span context is propagated over the wire between different applications.
-It is not hard to see that this process can be generalized to passing more than just the tracing context.
-With OpenTracing instrumentation in place, we can support general purpose _distributed context propagation_
-where we associate some metadata with the transaction and make that metadata available anywhere in the
-distributed call graph. In OpenTracing this metadata is called _baggage_, to highlight the fact that
-it is carried over in-band with all RPC requests, just like baggage.
+In Lesson 3 we have seen how span context is propagated over the wire between different applications. It is not hard to see that this process can be generalized to passing more than just the tracing context. With OpenTracing instrumentation in place, we can support general purpose _distributed context propagation_ where we associate some metadata with the transaction and make that metadata available anywhere in the distributed call graph. In OpenTracing this metadata is called _baggage_, to highlight the fact that it is carried over in-band with all RPC requests, just like baggage.
 
-To see how it works in OpenTracing, let's take the application we built in Lesson 3. You can copy the source
-code from [../lesson03/solution](../lesson03/solution) package:
+To see how it works in OpenTracing, let's take the application we built in Lesson 3. You can copy the source code from [../lesson03/solution](../lesson03/solution) package:
 
 ```
 mkdir lesson04/exercise
 cp -r lesson03/solution/*py lesson04/exercise/
 ```
 
-The `formatter` service takes the `helloTo` parameter and returns a string `Hello, {helloTo}!`. Let's modify
-it so that we can customize the greeting too, but without modifying the public API of that service.
+The `formatter` service takes the `helloTo` parameter and returns a string `Hello, {helloTo}!`. Let's modify it so that we can customize the greeting too, but without modifying the public API of that service.
 
 ### Set Baggage in the Client
 
@@ -43,23 +36,22 @@ And update `sayHello`:
 
 ```python
 def say_hello(hello_to, greeting):
-    with tracer.start_span('say-hello') as span:
-        span.set_tag('hello-to', hello_to)
-        span.set_baggage_item('greeting', greeting)
-        with span_in_context(span):
-            hello_str = format_string(hello_to)
-            print_hello(hello_str)
+    with tracer.start_active_span('say-hello') as scope:
+        scope.span.set_tag('hello-to', hello_to)
+        scope.span.set_baggage_item('greeting', greeting)
+        hello_str = format_string(hello_to)
+        print_hello(hello_str)
 ```
 
-By doing this we read a second command line argument as a "greeting" and store it in the baggage under `'greeting'` key.
+By doing this we read a second command line argument as a "greeting" and store it in the baggage under the `'greeting'` key.
 
 ### Read Baggage in Formatter
 
 Change the following code in the `formatter`'s HTTP handler:
 
 ```python
-with tracer.start_span('format', child_of=span_ctx, tags=span_tags) as span:
-    greeting = span.get_baggage_item('greeting')
+with tracer.start_active_span('format', child_of=span_ctx, tags=span_tags) as scope:
+    greeting = scope.span.get_baggage_item('greeting')
     if not greeting:
         greeting = 'Hello'
     hello_to = request.args.get('helloTo')
@@ -68,8 +60,7 @@ with tracer.start_span('format', child_of=span_ctx, tags=span_tags) as span:
 
 ### Run it
 
-As in Lesson 3, first start the `formatter` and `publisher` in separate terminals, then run the client
-with two arguments, e.g. `Bryan Bonjour`. The `publisher` should print `Bonjour, Bryan!`.
+As in Lesson 3, first start the `formatter` and `publisher` in separate terminals, then run the client with two arguments, e.g. `Bryan Bonjour`. The `publisher` should print `Bonjour, Bryan!`.
 
 ```
 # client
@@ -107,13 +98,7 @@ Reporting span 1f5b4b5b21ea181d:214e6b2fb3400125:1f5b4b5b21ea181d:1 publisher.pu
 
 ### What's the Big Deal?
 
-We may ask - so what, we could've done the same thing by passing the `greeting` as an HTTP request parameter.
-However, that is exactly the point of this exercise - we did not have to change any APIs on the path from
-the root span in `hello.py` all the way to the server-side span in `formatter`, three levels down.
-If we had a much larger application with much deeper call tree, say the `formatter` was 10 levels down,
-the exact code changes we made here would have worked, despite 8 more services being in the path.
-If changing the API was the only way to pass the data, we would have needed to modify 8 more services
-to get the same effect.
+We may ask - so what, we could've done the same thing by passing the `greeting` as an HTTP request parameter. However, that is exactly the point of this exercise - we did not have to change any APIs on the path from the root span in `hello.py` all the way to the server-side span in `formatter`, three levels down. If we had a much larger application with much deeper call tree, say the `formatter` was 10 levels down, the exact code changes we made here would have worked, despite 8 more services being in the path. If changing the API was the only way to pass the data, we would have needed to modify 8 more services to get the same effect.
 
 Some of the possible applications of baggage include:
 
@@ -125,10 +110,7 @@ Some of the possible applications of baggage include:
 
 ### Now, a Warning... NOW a Warning?
 
-Of course, while baggage is an extermely powerful mechanism, it is also dangerous. If we store a 1Mb value/string
-in baggage, every request in the call graph below that point will have to carry that 1Mb of data. So baggage
-must be used with caution. In fact, Jaeger client libraries implement centrally controlled baggage restrictions,
-so that only blessed services can put blessed keys in the baggage, with possible restrictions on the value length.
+Of course, while baggage is an extremely powerful mechanism, it is also dangerous. If we store a 1Mb value/string in baggage, every request in the call graph below that point will have to carry that 1Mb of data. So baggage must be used with caution. In fact, Jaeger client libraries implement centrally controlled baggage restrictions, so that only blessed services can put blessed keys in the baggage, with possible restrictions on the value length.
 
 ## Conclusion
 

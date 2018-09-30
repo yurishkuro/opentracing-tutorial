@@ -91,18 +91,14 @@ The tracing instrumentation uses `inject` and `extract` to pass the span context
 
 ### Instrumenting the Client
 
-In the `format_string` function we already create a child span. In order to pass its context over the HTTP
-request we need to call `tracer.inject` before building the HTTP request. But since we're building the HTTP
-requerst inside a helper function `http_get`, we need to make sure that function has access to the new
-child span we started. We can use `span_in_context()` again:
+In the `format_string` function we already create a child span. Since we call `tracer.start_active_span()`, this child span will be available inside the helper function `http_get`.
 
 ```python
 def format_string(hello_to):
-    with tracer.start_span('format', child_of=get_current_span()) as span:
-        with span_in_context(span):
-            hello_str = http_get(8081, 'format', 'helloTo', hello_to)
-            span.log_kv({'event': 'string-format', 'value': hello_str})
-            return hello_str
+    with tracer.start_active_span('format') as scope:
+        hello_str = http_get(8081, 'format', 'helloTo', hello_to)
+        scope.span.log_kv({'event': 'string-format', 'value': hello_str})
+        return hello_str
 ```
 
 Now let's change `http_get` function to actually inject the span into HTTP headers using `headers` dictionary:
@@ -111,7 +107,7 @@ Now let's change `http_get` function to actually inject the span into HTTP heade
 def http_get(port, path, param, value):
     url = 'http://localhost:%s/%s' % (port, path)
 
-    span = get_current_span()
+    span = tracer.active_span
     span.set_tag(tags.HTTP_METHOD, 'GET')
     span.set_tag(tags.HTTP_URL, url)
     span.set_tag(tags.SPAN_KIND, tags.SPAN_KIND_RPC_CLIENT)
@@ -167,12 +163,12 @@ and tagging the span as `span.kind=server`.
 def format():
     span_ctx = tracer.extract(Format.HTTP_HEADERS, request.headers)
     span_tags = {tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER}
-    with tracer.start_span('format', child_of=span_ctx, tags=span_tags):
+    with tracer.start_active_span('format', child_of=span_ctx, tags=span_tags):
         hello_to = request.args.get('helloTo')
         return 'Hello, %s!' % hello_to
 ```
 
-Make a similar change in `publisher.py`.
+Make a similar change in `publisher.py`. Note that we are still using `start_active_span` for consistency. In this example it does not make much of a difference, but if the logic in the formatter and publisher was more involved, we could benefit from propagating the span through thread locals.
 
 ### Take It For a Spin
 
@@ -215,7 +211,7 @@ Reporting span f9c08d60e0dacb08:a9df5f5c83588207:f9c08d60e0dacb08:1 publisher.pu
 
 Note how all recorded spans show the same trace ID `f9c08d60e0dacb08`. This is a sign
 of correct instrumentation. It is also a very useful debugging approach when something
-is wrong with tracing. A typical error is to miss the context propagation somwehere,
+is wrong with tracing. A typical error is to miss the context propagation somewhere,
 either in-process or inter-process, which results in different trace IDs and broken
 traces.
 

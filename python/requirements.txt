@@ -1,6 +1,10 @@
-opentracing>=1.2,<2
-jaeger-client>=3.8,<4
-opentracing_instrumentation>=2.2,<3
+opentracing>=2,<3
+
+# We want something like: jaeger-client>=3.8,<4
+# But Scope Manager support not officially released in Jaeger at the time of writing.
+# This is using branch 'feature/opentracing-2.0-support' in @yurishkuro's fork.
+-e git+https://github.com/yurishkuro/jaeger-client-python.git@d631596415cb549a4e8314cc25d6c53fab710528#egg=jaeger-client
+
 requests
 flask
 futures; python_version < "3"

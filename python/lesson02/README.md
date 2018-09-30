@@ -121,52 +121,42 @@ If we find this trace in the UI, it will show a proper parent-child relationship
 
 You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object
 as the first argument to each function. Unlike Go, languages like Java and Python support thread-local
-storage, which is convenient for storing such request-scoped data like the current span. Unfortunately,
-unlike in Java, the OpenTracing API for Python currently does not expose a standard mechanism of accessing
-such thread-local storage (or its equivalents in async frameworks like `tornado` or `gevent`). The new
-API is curently a work in progress and should be available soon.
+storage, which is convenient for storing such request-scoped data like the current span. As of v2 the OpenTracing API for Python supports a standard mechanism for passing and accessing the current span using the concepts of Scope Manager and Scope, which are using either plain thread-local storage or more specific mechanisms provided by various async frameworks like `tornado` or `gevent`. 
 
-For the purpose of this tutorial, we will use an alternative API available in module `opentracing_instrumentation`,
-which is already included in the `requirements.txt`. This modue provides an in-memory context propagation
-facility suitable for multi-threaded apps and Tornado apps, via its `request_context` submodule.
-
-When we create the top level `root_span`, we can store it in the context like this:
+Instead of calling `start_span` on the tracer, we can call `start_active_span` that invokes that mechanism and makes the span "active" and accessible via `tracer.active_span`. The return value of the `start_active_span` is a `Scope` object that needs to be closed in order to restore the previously active span on the stack.
 
 ```python
-from opentracing_instrumentation.request_context import get_current_span, span_in_context
-
 def say_hello(hello_to):
-    with tracer.start_span('say-hello') as span:
-        span.set_tag('hello-to', hello_to)
-        with span_in_context(span):
-            hello_str = format_string(hello_to)
-            print_hello(hello_str)
+    with tracer.start_active_span('say-hello') as scope:
+        scope.span.set_tag('hello-to', hello_to)
+        hello_str = format_string(hello_to)
+        print_hello(hello_str)
 ```
 
 Notice that we're no longer passing the span as argument to the functions, because they can now
-retrieve the span with `get_current_span` function:
+retrieve the span with `tracer.active_span` function. However, because creating a child span of a currently active span is such a common pattern, this now happens automatically, so that we do not need to pass the `child_of` reference to the parent span anymore:
 
 ```python
 def format_string(hello_to):
-    root_span = get_current_span()
-    with tracer.start_span('format', child_of=root_span) as span:
+    with tracer.start_active_span('format') as scope:
         hello_str = 'Hello, %s!' % hello_to
-        span.log_kv({'event': 'string-format', 'value': hello_str})
+        scope.span.log_kv({'event': 'string-format', 'value': hello_str})
         return hello_str
 
 def print_hello(hello_str):
-    root_span = get_current_span()
-    with tracer.start_span('println', child_of=root_span) as span:
+    with tracer.start_active_span('println') as scope:
         print(hello_str)
-        span.log_kv({'event': 'println'})
+        scope.span.log_kv({'event': 'println'})
 ```
+
+Note that because `start_active_span` function returns a `Scope` instead of a `Span`, we use `scope.span` property to access the span when we want to annotate it with tags or logs. We could also use `tracer.active_span` property with the same effect.
 
 If we run this modified program, we will see that all three reported spans still have the same trace ID.
 
 ### What's the Big Deal?
 
 The last change we made may not seem particularly useful. But imagine that your program is
-much larger with many functions calling each other. By using the `request_context` mechanism we can access
+much larger with many functions calling each other. By using the Scope Manager mechanism we can access
 the current span from any place in the program without having to pass the span object as the argument to
 all the function calls. This is especially useful if we are using instrumented RPC frameworks that perform
 tracing functions automatically - they have a stable way of finding the current span.
