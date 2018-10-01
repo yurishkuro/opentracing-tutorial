@@ -161,6 +161,10 @@ Right now we're formatting the `helloStr` and then printing it. Both of these op
 time, so we can log their completion:
 
 ```go
+import "github.com/opentracing/opentracing-go/log"
+
+...
+
 helloStr := fmt.Sprintf("Hello, %s!", helloTo)
 span.LogFields(
     log.String("event", "string-format"),
