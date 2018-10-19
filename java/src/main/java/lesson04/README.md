@@ -15,7 +15,8 @@ distributed call graph. In OpenTracing this metadata is called _baggage_, to hig
 it is carried over in-band with all RPC requests, just like baggage.
 
 To see how it works in OpenTracing, let's take the application we built in Lesson 3. You can copy the source
-code from [../lesson03/solution](../lesson03/solution) package:
+code from [../lesson03/solution](../lesson03/solution) package, changing the package name to `lesson04.exercise`
+afterwards:
 
 ```
 cp src/main/java/lesson03/solution/*java src/main/java/lesson04/exercise
@@ -41,7 +42,7 @@ public static void main(String[] args) {
 }
 ```
 
-And add this instruction to `sayHello` method after starting the span:
+Add a new `String greeting` parameter to the `sayHello` method and add this instruction to it, after starting the span:
 
 ```java
 scope.span().setBaggageItem("greeting", greeting);
@@ -70,24 +71,24 @@ with two arguments, e.g. `Bryan Bonjour`. The `publisher` should print `Bonjour,
 # formatter
 $ ./run.sh lesson04.exercise.Formatter server
 [skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3508ms
-INFO io.jaegertracing.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:cd2c1d243ddf319b:ef06ddba375ff053:1 - format
-127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 15 "-" "okhttp/3.9.0" 69
+INFO  [2018-10-19 09:41:19,267] org.eclipse.jetty.server.Server: Started @2456ms
+INFO  [2018-10-19 09:41:32,373] io.jaegertracing.internal.reporters.LoggingReporter: Span reported: 7e19675d346d5019:7f79bb6597052eac:9fc7cbcf281445d3:1 - format
+127.0.0.1 - - [19/Oct/2018:09:41:32 +0000] "GET /format?helloTo=Bryan HTTP/1.1" 200 15 "-" "okhttp/3.9.0" 53
 
 # publisher
 $ ./run.sh lesson04.exercise.Publisher server
 [skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3388ms
+INFO  [2018-10-19 09:41:26,507] org.eclipse.jetty.server.Server: Started @2266ms
 Bonjour, Bryan!
-INFO io.jaegertracing.reporters.LoggingReporter: Span reported: e6ee8a816c8386ce:f46156fcd7d3abd3:20cdfed1d23892c1:1 - publish
-127.0.0.1 - - "GET /publish?helloStr=Bonjour,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 92
+INFO  [2018-10-19 09:41:32,507] io.jaegertracing.internal.reporters.LoggingReporter: Span reported: 7e19675d346d5019:e77c64c2f8cb9c94:d966ef9a6a1c035b:1 - publish
+127.0.0.1 - - [19/Oct/2018:09:41:32 +0000] "GET /publish?helloStr=Bonjour,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 61
 
 # client
 $ ./run.sh lesson04.exercise.Hello Bryan Bonjour
-INFO io.jaegertracing.Configuration - Initialized tracer=Tracer(...)
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:ef06ddba375ff053:e6ee8a816c8386ce:1 - formatString
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:20cdfed1d23892c1:e6ee8a816c8386ce:1 - printHello
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: e6ee8a816c8386ce:e6ee8a816c8386ce:0:1 - say-hello
+11:41:32.068 [main] INFO io.jaegertracing.Configuration - Initialized tracer=JaegerTracer(version=Java-0.32.0, serviceName=hello-world, ...)
+11:41:32.405 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 7e19675d346d5019:9fc7cbcf281445d3:7e19675d346d5019:1 - formatString
+11:41:32.520 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 7e19675d346d5019:d966ef9a6a1c035b:7e19675d346d5019:1 - printHello
+11:41:32.520 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 7e19675d346d5019:7e19675d346d5019:0:1 - say-hello
 ```
 
 ### What's the Big Deal?
