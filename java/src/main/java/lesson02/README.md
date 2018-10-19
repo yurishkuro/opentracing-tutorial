@@ -67,10 +67,10 @@ Let's run it:
 
 ```
 $ ./run.sh lesson02.exercise.Hello Bryan
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 12c92a6604499c25:12c92a6604499c25:0:1 - formatString
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 5c8896b14a475325:5c8896b14a475325:0:1 - formatString
 Hello, Bryan!
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 14aaaf7a377e5147:14aaaf7a377e5147:0:1 - printHello
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: a25cf88369793b9b:a25cf88369793b9b:0:1 - say-hello
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 4d321526e688db82:4d321526e688db82:0:1 - printHello
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 77572ab6fda3b52f:77572ab6fda3b52f:0:1 - say-hello
 ```
 
 We got three spans, but there is a problem here. The first hexadecimal segment of the output represents
@@ -100,14 +100,14 @@ spans now belong to the same trace:
 
 ```
 $ ./run.sh lesson02.exercise.Hello Bryan
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:42d38965612a195a:4ca67017b68d14c:1 - formatString
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: dfc93ecae4890fbb:a575db749dc9a88f:dfc93ecae4890fbb:1 - formatString
 Hello, Bryan!
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:19af156b64c22d23:4ca67017b68d14c:1 - printHello
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 4ca67017b68d14c:4ca67017b68d14c:0:1 - say-hello
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: dfc93ecae4890fbb:406faa4bb0446653:dfc93ecae4890fbb:1 - printHello
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: dfc93ecae4890fbb:dfc93ecae4890fbb:0:1 - say-hello
 ```
 
 We can also see that instead of `0` in the 3rd position the first two reported spans display
-`4ca67017b68d14c`, which is the ID of the root span. The root span is reported last because
+`dfc93ecae4890fbb`, which is the ID of the root span. The root span is reported last because
 it is the last one to finish.
 
 If we find this trace in the UI, it will show a proper parent-child relationship between the spans.
@@ -124,6 +124,8 @@ OpenTracing API for Java provides a better way. Using thread-locals and the noti
 we can avoid passing the span through our code and just access it via `tracer`.
 
 ```java
+import io.opentracing.Scope;
+
 private void sayHello(String helloTo) {
     try (Scope scope = tracer.buildSpan("say-hello").startActive(true)) {
         scope.span().setTag("hello-to", helloTo);

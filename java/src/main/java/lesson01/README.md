@@ -102,7 +102,7 @@ Our `pom.xml` already imports Jaeger:
 <dependency>
     <groupId>io.jaegertracing</groupId>
     <artifactId>jaeger-client</artifactId>
-    <version>0.31.0</version>
+    <version>0.32.0</version>
 </dependency>
 ```
 
@@ -115,8 +115,8 @@ import io.jaegertracing.Configuration.SamplerConfiguration;
 import io.jaegertracing.internal.JaegerTracer;
 
 public static JaegerTracer initTracer(String service) {
-    SamplerConfiguration samplerConfig = new SamplerConfiguration().withType("const").withParam(1);
-    ReporterConfiguration reporterConfig = new ReporterConfiguration().withLogSpans(true);
+    SamplerConfiguration samplerConfig = SamplerConfiguration.fromEnv().withType("const").withParam(1);
+    ReporterConfiguration reporterConfig = ReporterConfiguration.fromEnv().withLogSpans(true);
     Configuration config = new Configuration(service).withSampler(samplerConfig).withReporter(reporterConfig);
     return config.getTracer();
 }
@@ -136,9 +136,9 @@ If we run the program now, we should see a span logged:
 
 ```
 $ ./run.sh lesson01.exercise.Hello Bryan
-[lesson01.exercise.Hello.main()] INFO io.jaegertracing.Configuration - Initialized tracer=Tracer(...)
+INFO io.jaegertracing.Configuration - Initialized tracer=JaegerTracer(version=Java-0.32.0, serviceName=hello-world, ...)
 Hello, Bryan!
-[lesson01.exercise.Hello.main()] INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: aa206e9b64ca5f8b:aa206e9b64ca5f8b:0:1 - say-hello
 ```
 
 If you have Jaeger backend running, you should be able to see the trace in the UI.
@@ -187,6 +187,9 @@ Right now we're formatting the `helloStr` and then printing it. Both of these op
 time, so we can log their completion:
 
 ```java
+import com.google.common.collect.ImmutableMap;
+
+// this goes inside the sayHello method
 String helloStr = String.format("Hello, %s!", helloTo);
 span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
 

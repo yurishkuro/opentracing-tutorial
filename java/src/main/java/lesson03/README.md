@@ -34,7 +34,7 @@ Execute an HTTP request against the formatter:
 
 ```
 $ curl 'http://localhost:8081/format?helloTo=Bryan'
-Hello, Bryan!%
+Hello, Bryan!
 ```
 
 Execute and HTTP request against the publisher:
@@ -50,10 +50,10 @@ Finally, if we run the client app as we did in the previous lessons:
 
 ```
 $ ./run.sh lesson03.exercise.Hello Bryan
-2017/09/24 21:43:33 Initializing logging reporter
-2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:5d10cdd1a9cf004a:7af6719d92c3df6d:1
-2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:538a7bfd34893922:7af6719d92c3df6d:1
-2017/09/24 21:43:33 Reporting span 7af6719d92c3df6d:7af6719d92c3df6d:0:1
+INFO io.jaegertracing.Configuration - Initialized tracer=JaegerTracer(version=Java-0.32.0, serviceName=hello-world, ...)
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 3375c5bb090033f5:3b92b00e99b6d74c:3375c5bb090033f5:1 - formatString
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 3375c5bb090033f5:45021dd8d1095091:3375c5bb090033f5:1 - printHello
+INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: 3375c5bb090033f5:3375c5bb090033f5:0:1 - say-hello
 ```
 
 We will see the `publisher` printing the line `"Hello, Bryan!"`.
@@ -80,10 +80,13 @@ The tracing instrumentation uses `inject` and `extract` to pass the span context
 
 ### Instrumenting the Client
 
-In the `formatString` function we already create a child span. In order to pass its context over the HTTP
-request we need to call `tracer.inject` before building the HTTP request:
+In the `Hello#formatString()` function we already create a child span. In order to pass its context over the HTTP
+request we need to call `tracer.inject` before building the HTTP request in `Hello#getHttp()`
 
 ```java
+import io.opentracing.propagation.Format;
+import io.opentracing.tag.Tags;
+
 Tags.SPAN_KIND.set(tracer.activeSpan(), Tags.SPAN_KIND_CLIENT);
 Tags.HTTP_METHOD.set(tracer.activeSpan(), "GET");
 Tags.HTTP_URL.set(tracer.activeSpan(), url.toString());
@@ -94,6 +97,11 @@ In this case the `carrier` is HTTP request headers object, which we adapt to the
 by wrapping in `RequestBuilderCarrier` helper class. 
 
 ```java
+import java.util.Iterator;
+import java.util.Map;
+
+import okhttp3.Request;
+
 public class RequestBuilderCarrier implements io.opentracing.propagation.TextMap {
     private final Request.Builder builder;
 
@@ -126,13 +134,20 @@ Our servers are currently not instrumented for tracing. We need to do the follow
 For the code snippets we are adding, we need a few extra imports:
 
 ```java
+import java.util.HashMap;
+
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.opentracing.Scope;
+import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMapExtractAdapter;
+import io.opentracing.tag.Tags;
 import lib.Tracing;
 ```
 
@@ -160,8 +175,7 @@ new Formatter(tracer).run(args);
 First, let's add a helper function on the Hello class:
 
 ```java
-public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders,
-        String operationName) {
+public static Scope startServerSpan(Tracer tracer, HttpHeaders httpHeaders, String operationName) {
     // format the headers for extraction
     MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
     final HashMap<String, String> headers = new HashMap<String, String>();
@@ -218,27 +232,27 @@ Then run `lesson03.exercise.Hello`. You should see the outputs like this:
 # formatter
 $ ./run.sh lesson03.exercise.Formatter server
 [skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3968ms
-INFO io.jaegertracing.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:b73ff97ea68a36f8:72910f6018b1bd09:1 - format
-127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 13 "-" "okhttp/3.9.0" 3
+INFO  [2018-10-19 09:12:55,389] org.eclipse.jetty.server.Server: Started @2892ms
+INFO  [2018-10-19 09:13:02,001] io.jaegertracing.internal.reporters.LoggingReporter: Span reported: ed5421da32d2cbe9:e7874d61d10a0c4d:9256da5294132c28:1 - format
+127.0.0.1 - - [19/Oct/2018:09:13:02 +0000] "GET /format?helloTo=Bryan HTTP/1.1" 200 13 "-" "okhttp/3.9.0" 56
 
 # publisher
 $ ./run.sh lesson03.exercise.Publisher server
 [skip noise]
-INFO org.eclipse.jetty.server.Server: Started @3388ms
+INFO  [2018-10-19 09:12:56,636] org.eclipse.jetty.server.Server: Started @2619ms
 Hello, Bryan!
-INFO io.jaegertracing.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:4a2c39e462cb2a92:62d73167c129ecd7:1 - publish
-127.0.0.1 - - "GET /publish?helloStr=Hello,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 80
+INFO  [2018-10-19 09:13:02,173] io.jaegertracing.internal.reporters.LoggingReporter: Span reported: ed5421da32d2cbe9:8ac04690780c2b5c:ddc6239bde637c47:1 - format
+127.0.0.1 - - [19/Oct/2018:09:13:02 +0000] "GET /publish?helloStr=Hello,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 89
 
 # client
 $ ./run.sh lesson03.exercise.Hello Bryan
-INFO io.jaegertracing.Configuration - Initialized tracer=Tracer(...)
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello
-INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:5fe2d9de96c3887a:0:1 - say-hello
+11:13:01.695 [main] INFO io.jaegertracing.Configuration - Initialized tracer=JaegerTracer(version=Java-0.32.0, serviceName=hello-world, ...)
+11:13:02.035 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: ed5421da32d2cbe9:9256da5294132c28:ed5421da32d2cbe9:1 - formatString
+11:13:02.190 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: ed5421da32d2cbe9:ddc6239bde637c47:ed5421da32d2cbe9:1 - printHello
+11:13:02.190 [main] INFO io.jaegertracing.internal.reporters.LoggingReporter - Span reported: ed5421da32d2cbe9:ed5421da32d2cbe9:0:1 - say-hello
 ```
 
-Note how all recorded spans show the same trace ID `5fe2d9de96c3887a`. This is a sign
+Note how all recorded spans show the same trace ID `ed5421da32d2cbe9`. This is a sign
 of correct instrumentation. It is also a very useful debugging approach when something
 is wrong with tracing. A typical error is to miss the context propagation somwehere,
 either in-process or inter-process, which results in different trace IDs and broken
