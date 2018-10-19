@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
 import io.dropwizard.setup.Environment;
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import lib.Tracing;
@@ -48,7 +49,8 @@ public class Formatter extends Application<Configuration> {
         System.setProperty("dw.server.applicationConnectors[0].port", "8081");
         System.setProperty("dw.server.adminConnectors[0].port", "9081");
 
-        Tracer tracer = Tracing.init("formatter");
-        new Formatter(tracer).run(args);
+        try (JaegerTracer tracer = Tracing.init("formatter")) {
+            new Formatter(tracer).run(args);
+        }
     }
 }

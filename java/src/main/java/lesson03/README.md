@@ -219,7 +219,7 @@ Then run `lesson03.exercise.Hello`. You should see the outputs like this:
 $ ./run.sh lesson03.exercise.Formatter server
 [skip noise]
 INFO org.eclipse.jetty.server.Server: Started @3968ms
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:b73ff97ea68a36f8:72910f6018b1bd09:1 - format
+INFO io.jaegertracing.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:b73ff97ea68a36f8:72910f6018b1bd09:1 - format
 127.0.0.1 - - "GET /format?helloTo=Bryan HTTP/1.1" 200 13 "-" "okhttp/3.9.0" 3
 
 # publisher
@@ -227,15 +227,15 @@ $ ./run.sh lesson03.exercise.Publisher server
 [skip noise]
 INFO org.eclipse.jetty.server.Server: Started @3388ms
 Hello, Bryan!
-INFO com.uber.jaeger.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:4a2c39e462cb2a92:62d73167c129ecd7:1 - publish
+INFO io.jaegertracing.reporters.LoggingReporter: Span reported: 5fe2d9de96c3887a:4a2c39e462cb2a92:62d73167c129ecd7:1 - publish
 127.0.0.1 - - "GET /publish?helloStr=Hello,%20Bryan! HTTP/1.1" 200 9 "-" "okhttp/3.9.0" 80
 
 # client
 $ ./run.sh lesson03.exercise.Hello Bryan
-INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello
-INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:5fe2d9de96c3887a:0:1 - say-hello
+INFO io.jaegertracing.Configuration - Initialized tracer=Tracer(...)
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:72910f6018b1bd09:5fe2d9de96c3887a:1 - formatString
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:62d73167c129ecd7:5fe2d9de96c3887a:1 - printHello
+INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 5fe2d9de96c3887a:5fe2d9de96c3887a:0:1 - say-hello
 ```
 
 Note how all recorded spans show the same trace ID `5fe2d9de96c3887a`. This is a sign

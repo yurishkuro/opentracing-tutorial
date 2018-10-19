@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
 import io.dropwizard.setup.Environment;
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import lib.Tracing;
@@ -47,7 +48,8 @@ public class Publisher extends Application<Configuration> {
     public static void main(String[] args) throws Exception {
         System.setProperty("dw.server.applicationConnectors[0].port", "8082");
         System.setProperty("dw.server.adminConnectors[0].port", "9082");
-        Tracer tracer = Tracing.init("publisher");
-        new Publisher(tracer).run(args);
+        try (JaegerTracer tracer = Tracing.init("publisher")) {
+            new Publisher(tracer).run(args);
+        }
     }
 }

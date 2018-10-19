@@ -1,13 +1,14 @@
 package lesson02.solution;
 
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
 
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import lib.Tracing;
 
 public class HelloManual {
-    
+
     private final Tracer tracer;
 
     private HelloManual(Tracer tracer) {
@@ -15,9 +16,9 @@ public class HelloManual {
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
         span.setTag("hello-to", helloTo);
-        
+
         String helloStr = formatString(span, helloTo);
         printHello(span, helloStr);
 
@@ -25,7 +26,7 @@ public class HelloManual {
     }
 
     private  String formatString(Span rootSpan, String helloTo) {
-        Span span = tracer.buildSpan("formatString").asChildOf(rootSpan).startManual();
+        Span span = tracer.buildSpan("formatString").asChildOf(rootSpan).start();
         try {
             String helloStr = String.format("Hello, %s!", helloTo);
             span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
@@ -36,7 +37,7 @@ public class HelloManual {
     }
 
     private void printHello(Span rootSpan, String helloStr) {
-        Span span = tracer.buildSpan("printHello").asChildOf(rootSpan).startManual();
+        Span span = tracer.buildSpan("printHello").asChildOf(rootSpan).start();
         try {
             System.out.println(helloStr);
             span.log(ImmutableMap.of("event", "println"));
@@ -49,9 +50,10 @@ public class HelloManual {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expecting one argument");
         }
+
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
-        new HelloManual(tracer).sayHello(helloTo);
-        tracer.close();
+        try (JaegerTracer tracer = Tracing.init("hello-world")) {
+            new HelloManual(tracer).sayHello(helloTo);
+        }
     }
 }

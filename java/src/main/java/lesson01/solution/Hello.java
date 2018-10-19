@@ -1,9 +1,10 @@
 package lesson01.solution;
 
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
 
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import lib.Tracing;
 
 public class Hello {
@@ -15,9 +16,9 @@ public class Hello {
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
         span.setTag("hello-to", helloTo);
-        
+
         String helloStr = String.format("Hello, %s!", helloTo);
         span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
 
@@ -31,9 +32,10 @@ public class Hello {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expecting one argument");
         }
+
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
-        new Hello(tracer).sayHello(helloTo);
-        tracer.close();
+        try (JaegerTracer tracer = Tracing.init("hello-world")) {
+            new Hello(tracer).sayHello(helloTo);
+        }
     }
 }

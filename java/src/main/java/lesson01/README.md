@@ -53,18 +53,19 @@ We can use a global instance returned by `io.opentracing.util.GlobalTracer.get()
 
 ```java
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 
 public class Hello {
 
-    private final io.opentracing.Tracer tracer;
+    private final Tracer tracer;
 
-    private Hello(io.opentracing.Tracer tracer) {
+    private Hello(Tracer tracer) {
         this.tracer = tracer;
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
 
         String helloStr = String.format("Hello, %s!", helloTo);
         System.out.println(helloStr);
@@ -85,7 +86,7 @@ public class Hello {
 We are using the following basic features of the OpenTracing API:
   * a `tracer` instance is used to create a span builder via `buildSpan()`
   * each `span` is given an _operation name_, `"say-hello"` in this case
-  * builder is used to create a span via `startManual()`
+  * builder is used to create a span via `start()`
   * each `span` must be finished by calling its `finish()` function
   * the start and end timestamps of the span will be captured automatically by the tracer implementation
 
@@ -94,40 +95,38 @@ That's because the function `GlobalTracer.get()` returns a no-op tracer by defau
 
 ### Initialize a real tracer
 
-Let's create an instance of a real tracer, such as Jaeger (http://github.com/uber/jaeger-client-java).
+Let's create an instance of a real tracer, such as Jaeger (https://github.com/jaegertracing/jaeger-client-java).
 Our `pom.xml` already imports Jaeger:
 
 ```xml
 <dependency>
-    <groupId>com.uber.jaeger</groupId>
-    <artifactId>jaeger-core</artifactId>
-    <version>0.26.0</version>
+    <groupId>io.jaegertracing</groupId>
+    <artifactId>jaeger-client</artifactId>
+    <version>0.31.0</version>
 </dependency>
 ```
 
 First let's define a helper function that will create a tracer.
 
 ```java
-import com.uber.jaeger.Configuration;
-import com.uber.jaeger.Configuration.ReporterConfiguration;
-import com.uber.jaeger.Configuration.SamplerConfiguration;
+import io.jaegertracing.Configuration;
+import io.jaegertracing.Configuration.ReporterConfiguration;
+import io.jaegertracing.Configuration.SamplerConfiguration;
+import io.jaegertracing.internal.JaegerTracer;
 
-public static com.uber.jaeger.Tracer initTracer(String service) {
-    SamplerConfiguration samplerConfig = new SamplerConfiguration("const", 1);
-    ReporterConfiguration reporterConfig = new ReporterConfiguration(true, null, null, null, null);
-    Configuration config = new Configuration(service, samplerConfig, reporterConfig);
-    return (com.uber.jaeger.Tracer) config.getTracer();
+public static JaegerTracer initTracer(String service) {
+    SamplerConfiguration samplerConfig = new SamplerConfiguration().withType("const").withParam(1);
+    ReporterConfiguration reporterConfig = new ReporterConfiguration().withLogSpans(true);
+    Configuration config = new Configuration(service).withSampler(samplerConfig).withReporter(reporterConfig);
+    return config.getTracer();
 }
 ```
 
 To use this instance, let's change the main function:
 
 ```java
-import com.uber.jaeger.Tracer;
-
 Tracer tracer = initTracer("hello-world");
 new Hello(tracer).sayHello(helloTo);
-tracer.close();
 ```
 
 Note that we are passing a string `hello-world` to the init method. It is used to mark all spans emitted by
@@ -137,9 +136,9 @@ If we run the program now, we should see a span logged:
 
 ```
 $ ./run.sh lesson01.exercise.Hello Bryan
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.Configuration - Initialized tracer=Tracer(...)
+[lesson01.exercise.Hello.main()] INFO io.jaegertracing.Configuration - Initialized tracer=Tracer(...)
 Hello, Bryan!
-[lesson01.exercise.Hello.main()] INFO com.uber.jaeger.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
+[lesson01.exercise.Hello.main()] INFO io.jaegertracing.reporters.LoggingReporter - Span reported: 76509ca0cd333055:76509ca0cd333055:0:1 - say-hello
 ```
 
 If you have Jaeger backend running, you should be able to see the trace in the UI.
@@ -177,7 +176,7 @@ In the case of `Hello Bryan`, the string `"Bryan"` is a good candidate for a spa
 to the whole span and not to a particular moment in time. We can record it like this:
 
 ```java
-Span span = tracer.buildSpan("say-hello").startManual();
+Span span = tracer.buildSpan("say-hello").start();
 span.setTag("hello-to", helloTo);
 ```
 
