@@ -5,8 +5,6 @@
 The tutorials are using CNCF Jaeger (https://github.com/jaegertracing/jaeger) as the tracing backend, 
 [see here](../README.md) how to install it in a Docker image.
 
-Jaeger Python client currently only supports Python 2.7.
-
 This repository uses [virtualenv](https://pypi.python.org/pypi/virtualenv) and `pip` to manage dependencies.
 To install all dependencies, run:
 
