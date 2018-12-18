@@ -129,9 +129,9 @@ If we find this trace in the UI, it will show a proper parent-child relationship
 ### Propagate the in-process context
 
 You may have noticed one unpleasant side effect of our recent changes - we had to pass the Span object
-as the first argument to each function. Go langauge does not support the notion of thread-local variables,
+as the first argument to each function. Go language does not support the notion of thread-local variables,
 so in order to link the individual spans together we _do need to pass something_. We just don't want that
-to be the span object, since it pollutes the application with tracing code. The Go stardard library has
+to be the span object, since it pollutes the application with tracing code. The Go standard library has
 a type specifically designed for propagating request context throughout the application, called
 `context.Context`. In addition to handling things like deadlines and cancellations, the Context
 allows storing arbitrary key-value pairs, so we can use it to store the currently active span.
