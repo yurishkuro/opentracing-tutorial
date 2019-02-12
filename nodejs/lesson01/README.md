@@ -47,7 +47,7 @@ A trace is a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acy
 Each span has these minimum attributes: an operation name, a start time, and a finish time.
 
 Let's create a trace that consists of just a single span. To do that we need an instance of the `opentracing.Tracer`.
-We can use a global instance return by `new opentracing.Tracer()`.
+We can use a global instance returned by `new opentracing.Tracer()`.
 
 ```javascript
 const opentracing = require("opentracing");
