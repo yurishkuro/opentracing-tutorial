@@ -5,8 +5,6 @@ import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.okhttp3.TracingCallFactory;
-import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
 import lib.Tracing;
 import okhttp3.Call;
 import okhttp3.HttpUrl;
@@ -19,13 +17,11 @@ import java.io.IOException;
 public class Hello {
 
     private final Tracer       tracer;
-    private final OkHttpClient client;
     private final Call.Factory traceClient;
 
     private Hello(Tracer tracer) {
         this.tracer = tracer;
-        this.client = new OkHttpClient();
-        traceClient = new TracingCallFactory(this.client, tracer);
+        traceClient = new TracingCallFactory(new OkHttpClient(), tracer);
     }
 
     private String getHttp(int port, String path, String param, String value) {
