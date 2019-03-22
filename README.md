@@ -2,6 +2,14 @@
 
 A collection of tutorials for the OpenTracing API (https://opentracing.io).
 
+Also check out examples from the book [Mastering Distributed Tracing](https://www.shkuro.com/books/2019-mastering-distributed-tracing/):
+* [Chapter 4: Instrumentation Basics with OpenTracing](https://github.com/PacktPublishing/Mastering-Distributed-Tracing/tree/master/Chapter04)
+* [Chapter 5: Instrumentation of Asynchronous Applications](https://github.com/PacktPublishing/Mastering-Distributed-Tracing/tree/master/Chapter05)
+* [Chapter 7: Tracing with Service Mesh](https://github.com/PacktPublishing/Mastering-Distributed-Tracing/tree/master/Chapter07)
+* [Chapter 11: Integration with Metrics and Logs](https://github.com/PacktPublishing/Mastering-Distributed-Tracing/tree/master/Chapter11)
+* [Chapter 12: Gathering Insights Through Data Mining](https://github.com/PacktPublishing/Mastering-Distributed-Tracing/tree/master/Chapter12)
+
+
 ## Prerequisites
 
 The tutorials are using CNCF Jaeger (https://jaegertracing.io) as the tracing backend.
