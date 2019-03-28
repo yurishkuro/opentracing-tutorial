@@ -151,7 +151,7 @@ You may have noticed a few unpleasant side effects of our recent changes
   * we had to pass the Span object as the first argument to each function
   * we also had to write somewhat verbose try/finally code to finish the spans
 
-OpenTracing API for C# provides a better way. Using thread-locals and the notion of an "active span",
+OpenTracing API for C# provides a better way. Using context based storage (via AsyncLocal) and the notion of an "active span",
 we can avoid passing the span through our code and just access it via `_tracer`.
 
 ```csharp
