@@ -49,8 +49,6 @@ public class Formatter extends Application<Configuration> {
         System.setProperty("dw.server.applicationConnectors[0].port", "8081");
         System.setProperty("dw.server.adminConnectors[0].port", "9081");
 
-        try (JaegerTracer tracer = Tracing.init("formatter")) {
-            new Formatter(tracer).run(args);
-        }
+        new Formatter(Tracing.init("formatter")).run(args);
     }
 }
