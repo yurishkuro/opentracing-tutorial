@@ -115,7 +115,7 @@ Note that we are passing a string `'hello-world'` to the init method. It is used
 the tracer as originating from a `hello-world` service.
 
 There's one more thing we need to do. Jaeger Tracer is primarily designed for long-running server processes,
-so it has an internal buffer of spans that is flushed by a background thread. Since our program exists immediately,
+so it has an internal buffer of spans that is flushed by a background thread. Since our program exits immediately,
 it may not have time to flush the spans to Jaeger backend. Let's add the following to the end of `hello.py`:
 
 ```
