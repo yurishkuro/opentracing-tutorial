@@ -113,7 +113,7 @@ const tracer = initTracer("hello-world");
 Note that we are passing a string `"hello-world"` to the init method. It is used to mark all spans emitted by
 the tracer as originating from a `hello-world` service.
 
-There's one more thing we need to do. Jaeger Tracer is primarily designed for long-running server processes, so it has an internal buffer of spans that is flushed by a background thread. Since our program exists immediately,
+There's one more thing we need to do. Jaeger Tracer is primarily designed for long-running server processes, so it has an internal buffer of spans that is flushed by a background thread. Since our program exits immediately,
 it may not have time to flush the spans to Jaeger backend. Let's add the following to the end of `hello.js`:
 
 ```javascript
