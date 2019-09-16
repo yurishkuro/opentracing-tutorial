@@ -172,7 +172,7 @@ new Formatter(tracer).run(args);
 
 #### Extract the span context from the incoming request using `tracer.extract`
 
-First, let's add a helper function on the Hello class:
+First, let's add a helper function on the Formatter class:
 
 ```java
 public static Scope startServerSpan(Tracer tracer, HttpHeaders httpHeaders, String operationName) {
