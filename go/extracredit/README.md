@@ -9,5 +9,5 @@ including detailed tracing of the HTTP connection:
 
   * https://github.com/opentracing-contrib/go-stdlib
 
-Try replacing the manual OpenTracing instrumentation we added in [Lesson 3](./lesson03) around HTTP calls
+Try replacing the manual OpenTracing instrumentation we added in [Lesson 3](../lesson03) around HTTP calls
 with the instrumentation available in this library.
