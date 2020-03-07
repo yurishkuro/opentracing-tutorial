@@ -12,10 +12,12 @@ import io.jaegertracing.Configuration.SamplerConfiguration;
 import io.jaegertracing.internal.JaegerTracer;
 import io.jaegertracing.internal.samplers.ConstSampler;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
+import io.opentracing.propagation.TextMapAdapter;
 import io.opentracing.propagation.TextMapExtractAdapter;
 import io.opentracing.tag.Tags;
 import okhttp3.Request;
@@ -39,7 +41,7 @@ public final class Tracing {
         return config.getTracer();
     }
 
-    public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders, String operationName) {
+    public static Span startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders, String operationName) {
         // format the headers for extraction
         MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
         final HashMap<String, String> headers = new HashMap<String, String>();
@@ -49,7 +51,7 @@ public final class Tracing {
 
         Tracer.SpanBuilder spanBuilder;
         try {
-            SpanContext parentSpanCtx = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
+            SpanContext parentSpanCtx = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(headers));
             if (parentSpanCtx == null) {
                 spanBuilder = tracer.buildSpan(operationName);
             } else {
@@ -59,7 +61,7 @@ public final class Tracing {
             spanBuilder = tracer.buildSpan(operationName);
         }
         // TODO could add more tags like http.url
-        return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(true);
+        return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).start();
     }
 
     public static TextMap requestBuilderCarrier(final Request.Builder builder) {

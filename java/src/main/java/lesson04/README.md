@@ -45,7 +45,7 @@ public static void main(String[] args) {
 Add a new `String greeting` parameter to the `sayHello` method and add this instruction to it, after starting the span:
 
 ```java
-scope.span().setBaggageItem("greeting", greeting);
+span.setBaggageItem("greeting", greeting);
 ```
 
 By doing this we read a second command line argument as a "greeting" and store it in the baggage under `"greeting"` key.
@@ -55,7 +55,7 @@ By doing this we read a second command line argument as a "greeting" and store i
 Add the following code to the `formatter`'s HTTP handler:
 
 ```java
-String greeting = scope.span().getBaggageItem("greeting");
+String greeting = span.getBaggageItem("greeting");
 if (greeting == null) {
     greeting = "Hello";
 }
