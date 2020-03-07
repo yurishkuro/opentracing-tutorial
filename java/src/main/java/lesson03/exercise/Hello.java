@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import lib.Tracing;
 import okhttp3.HttpUrl;
@@ -40,26 +41,35 @@ public class Hello {
     }
 
     private void sayHello(String helloTo) {
-        try (Scope scope = tracer.buildSpan("say-hello").startActive(true)) {
-            scope.span().setTag("hello-to", helloTo);
+        Span span = tracer.buildSpan("say-hello").start();
+        try (Scope scope = tracer.scopeManager().activate(span)) {
+            span.setTag("hello-to", helloTo);
 
             String helloStr = formatString(helloTo);
             printHello(helloStr);
+        } finally {
+            span.finish();
         }
     }
 
     private String formatString(String helloTo) {
-        try (Scope scope = tracer.buildSpan("formatString").startActive(true)) {
+        Span span = tracer.buildSpan("formatString").start();
+        try (Scope scope = tracer.scopeManager().activate(span)) {
             String helloStr = getHttp(8081, "format", "helloTo", helloTo);
-            scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
+            span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
             return helloStr;
+        } finally {
+            span.finish();
         }
     }
 
     private void printHello(String helloStr) {
-        try (Scope scope = tracer.buildSpan("printHello").startActive(true)) {
+        Span span = tracer.buildSpan("printHello").start();
+        try (Scope scope = tracer.scopeManager().activate(span)) {
             getHttp(8082, "publish", "helloStr", helloStr);
-            scope.span().log(ImmutableMap.of("event", "println"));
+            span.log(ImmutableMap.of("event", "println"));
+        } finally{
+            span.finish();
         }
     }
 

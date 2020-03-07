@@ -127,41 +127,46 @@ we can avoid passing the span through our code and just access it via `tracer`.
 import io.opentracing.Scope;
 
 private void sayHello(String helloTo) {
-    try (Scope scope = tracer.buildSpan("say-hello").startActive(true)) {
-        scope.span().setTag("hello-to", helloTo);
+    Span span = tracer.buildSpan("say-hello").start();
+    try (Scope scope = tracer.scopeManager().activate(span)) {
+        span.setTag("hello-to", helloTo);
         
         String helloStr = formatString(helloTo);
         printHello(helloStr);
+    } finally {
+        span.finish();
     }
 }
 
 private  String formatString(String helloTo) {
-    try (Scope scope = tracer.buildSpan("formatString").startActive(true)) {
+    Span span = tracer.buildSpan("formatString").start();
+    try (Scope scope = tracer.scopeManager().activate(span)) {
         String helloStr = String.format("Hello, %s!", helloTo);
-        scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
+        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
+    } finally {
+        span.finish();
     }
 }
 
 private void printHello(String helloStr) {
-    try (Scope scope = tracer.buildSpan("printHello").startActive(true)) {
+    Span span = tracer.buildSpan("printHello").start();
+    try (Scope scope = tracer.scopeManager().activate(span)) {
         System.out.println(helloStr);
-        scope.span().log(ImmutableMap.of("event", "println"));
+        span.log(ImmutableMap.of("event", "println"));
+    } finally {
+        span.finish();
     }
 }
 ```
 
 In the above code we're making the following changes:
-  * We use `startActive()` method of the span builder instead of `start()`,
-    which makes the span "active" by storing it in a thread-local storage.
-  * `startActive()` returns a `Scope` object instead of a `Span`. Scope is a container of the currently
-    active span. We access the active span via `scope.span()`. Once the scope is closed, the previous
-    scope becomes current, thus re-activating previously active span in the current thread.
+  * `trace.scopeManager().active(span)` makes the given span the currently
+    active span. Once the scope is closed, the previous scope becomes current,
+    thus re-activating previously active span in the current thread.
   * `Scope` is auto-closable, which allows us to use try-with-resource syntax.
-  * The boolean parameter in `startActive(true)` tells the Scope that once it is closed it should
-    finish the span it represents.
-  * `startActive()` automatically creates a `ChildOf` reference to the previously active span, so that
-    we don't have to use `asChildOf()` builder method explicitly.
+  * If there is already an active span, it will act as the parent to the span
+    created by `buildSpan()`.
 
 If we run this program, we will see that all three reported spans have the same trace ID.
 

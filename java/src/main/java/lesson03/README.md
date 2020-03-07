@@ -146,7 +146,7 @@ import io.opentracing.Scope;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapExtractAdapter;
+import io.opentracing.propagation.TextMapAdapter;
 import io.opentracing.tag.Tags;
 import lib.Tracing;
 ```
@@ -175,7 +175,7 @@ new Formatter(tracer).run(args);
 First, let's add a helper function on the Formatter class:
 
 ```java
-public static Scope startServerSpan(Tracer tracer, HttpHeaders httpHeaders, String operationName) {
+public static Span startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders, String operationName) {
     // format the headers for extraction
     MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
     final HashMap<String, String> headers = new HashMap<String, String>();
@@ -185,23 +185,23 @@ public static Scope startServerSpan(Tracer tracer, HttpHeaders httpHeaders, Stri
 
     Tracer.SpanBuilder spanBuilder;
     try {
-        SpanContext parentSpan = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
-        if (parentSpan == null) {
+        SpanContext parentSpanCtx = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(headers));
+        if (parentSpanCtx == null) {
             spanBuilder = tracer.buildSpan(operationName);
         } else {
-            spanBuilder = tracer.buildSpan(operationName).asChildOf(parentSpan);
+            spanBuilder = tracer.buildSpan(operationName).asChildOf(parentSpanCtx);
         }
     } catch (IllegalArgumentException e) {
         spanBuilder = tracer.buildSpan(operationName);
     }
-    return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(true);
+    return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).start();
 }
 ```
 
 The logic here is similar to the client side instrumentation, except that we are using `tracer.extract`
 and tagging the span as `span.kind=server`. Instead of using a dedicated adapter class to convert
 JAXRS `HttpHeaders` type into `io.opentracing.propagation.TextMap`, we are copying the headers to a plain
-`HashMap<String, String>` and using a standard adapter `TextMapExtractAdapter`.
+`HashMap<String, String>` and using a standard adapter `TextMapAdapter`.
 
 It would be better to have this in a more appropriate place. We've prepared a `Tracing` class under the `lib`
 package: that's what we'll be using in the future.
@@ -211,10 +211,13 @@ Now change the `FormatterResource` handler method to use `startServerSpan`:
 ```java
 @GET
 public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
-    try (Scope scope = startServerSpan(tracer, httpHeaders, "format")) {
+    Span span = startServerSpan(tracer, httpHeaders, "format");
+    try (Scope scope = tracer.scopeManager.activate(span)) {
         String helloStr = String.format("Hello, %s!", helloTo);
-        scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
+        span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
+    } finally {
+      span.finish();
     }
 }
 ```

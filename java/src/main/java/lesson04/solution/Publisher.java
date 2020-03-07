@@ -15,6 +15,7 @@ import io.dropwizard.Configuration;
 import io.dropwizard.setup.Environment;
 import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import lib.Tracing;
 
@@ -32,10 +33,13 @@ public class Publisher extends Application<Configuration> {
 
         @GET
         public String format(@QueryParam("helloStr") String helloStr, @Context HttpHeaders httpHeaders) {
-            try (Scope scope = Tracing.startServerSpan(tracer, httpHeaders, "publish")) {
+            Span span = Tracing.startServerSpan(tracer, httpHeaders, "publish");
+            try (Scope scope = tracer.scopeManager().activate(span)) {
                 System.out.println(helloStr);
-                scope.span().log(ImmutableMap.of("event", "println", "value", helloStr));
+                span.log(ImmutableMap.of("event", "println", "value", helloStr));
                 return "published";
+            } finally {
+                span.finish();
             }
         }
     }
