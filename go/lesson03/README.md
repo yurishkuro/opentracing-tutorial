@@ -35,7 +35,7 @@ Execute an HTTP request against the formatter:
 
 ```
 $ curl 'http://localhost:8081/format?helloTo=Bryan'
-Hello, Bryan!%
+Hello, Bryan!
 ```
 
 Execute and HTTP request against the publisher:
