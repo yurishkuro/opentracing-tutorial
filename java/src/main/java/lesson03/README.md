@@ -257,7 +257,7 @@ $ ./run.sh lesson03.exercise.Hello Bryan
 
 Note how all recorded spans show the same trace ID `ed5421da32d2cbe9`. This is a sign
 of correct instrumentation. It is also a very useful debugging approach when something
-is wrong with tracing. A typical error is to miss the context propagation somwehere,
+is wrong with tracing. A typical error is to miss the context propagation somewhere,
 either in-process or inter-process, which results in different trace IDs and broken
 traces.
 

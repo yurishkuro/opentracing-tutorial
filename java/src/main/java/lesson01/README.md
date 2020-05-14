@@ -197,7 +197,7 @@ System.out.println(helloStr);
 span.log(ImmutableMap.of("event", "println"));
 ```
 
-The log statements might look a bit strange if you have not previosuly worked with a structured logging API.
+The log statements might look a bit strange if you have not previously worked with a structured logging API.
 Rather than formatting a log message into a single string that is easy for humans to read, structured
 logging APIs encourage you to separate bits and pieces of that message into key-value pairs that can be
 automatically processed by log aggregation systems. The idea comes from the realization that today most
