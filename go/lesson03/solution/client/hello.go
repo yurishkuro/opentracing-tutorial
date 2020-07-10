@@ -9,7 +9,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/yurishkuro/opentracing-tutorial/go/lib/http"
+	xhttp "github.com/yurishkuro/opentracing-tutorial/go/lib/http"
 	"github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
 )
 
@@ -57,6 +57,7 @@ func formatString(ctx context.Context, helloTo string) string {
 
 	resp, err := xhttp.Do(req)
 	if err != nil {
+		ext.Error.Set(span, true)
 		panic(err.Error())
 	}
 
@@ -88,6 +89,7 @@ func printHello(ctx context.Context, helloStr string) {
 	span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
 
 	if _, err := xhttp.Do(req); err != nil {
+		ext.Error.Set(span, true)
 		panic(err.Error())
 	}
 }
