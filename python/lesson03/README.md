@@ -132,6 +132,22 @@ from opentracing.propagation import Format
 
 You can rerun `hello.py` program now, but we won't see any difference.
 
+#### Handling Errors
+
+Since we turned our single-binary program into a distributed application that makes remote calls, we need to handle errors that may occur during communications. It is a good practice to tag the span with the tag `error=true` if the operation represented by the span failed. So, let's go ahead and update the `requests.get` call of `http_get` function with below code snippet:
+
+```python
+    try:
+        r = requests.get(url, params={param: value}, headers=headers)
+        assert r.status_code == 200
+        return r.text
+    except requests.ConnectionError as err:
+        span.set_tag(tags.ERROR, 'true')
+        print (err)
+```
+
+If either of the Publisher or Formatter are down, our client app will report the error to Jaeger. Jaeger will highlight all such errors in the UI corresponding to the failed span.
+
 ### Instrumenting the Servers
 
 Our servers are currently not instrumented for tracing. We need to do the following:

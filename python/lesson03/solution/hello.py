@@ -33,9 +33,13 @@ def http_get(port, path, param, value):
     headers = {}
     tracer.inject(span, Format.HTTP_HEADERS, headers)
 
-    r = requests.get(url, params={param: value}, headers=headers)
-    assert r.status_code == 200
-    return r.text
+    try:
+        r = requests.get(url, params={param: value}, headers=headers)
+        assert r.status_code == 200
+        return r.text
+    except requests.ConnectionError as err:
+        span.set_tag(tags.ERROR, 'true')
+        print (err)
 
 
 # main

@@ -13,7 +13,8 @@
     "express": "^4.16",
     "jaeger-client": "^3.10.0",
     "opentracing": "latest",
-    "request-promise": "latest"
+    "request-promise": "latest",
+    "request": "latest"
   },
   "devDependencies": {},
   "scripts": {}

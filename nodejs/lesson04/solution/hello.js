@@ -21,9 +21,9 @@ function sayHello(helloTo, greeting) {
             span.finish();
         })
         .catch( err => {
-            span.setTag(Tags.ERROR, true)
             span.setTag(Tags.HTTP_STATUS_CODE, err.statusCode || 500);
             span.finish();
+            throw err;
         });
 
 }
@@ -68,6 +68,7 @@ function http_get(fn, url, span) {
                 span.finish();
                 return data;
             }, e => {
+                span.setTag(Tags.ERROR, true)
                 span.finish();
                 throw e;
             });

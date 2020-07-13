@@ -125,6 +125,18 @@ Notice that we also add a couple additional tags to the span with some metadata 
 and we mark the span with a `span.kind=client` tag, as recommended by the OpenTracing
 [Semantic Conventions][semantic-conventions]. There are other tags we could add.
 
+#### Handling Errors
+Since we turned our single-binary program into a distributed application that makes remote calls, we need to handle errors that may occur during communications. It is a good practice to tag the span with the tag `error=true` if the operation represented by the span failed. So, let's go ahead and update the `catch` section of `get_http` function with below code snippet:
+
+```java
+catch (IOException e) {
+    Tags.ERROR.set(tracer.activeSpan(), true);
+    throw new RuntimeException(e);
+}
+```
+
+If either of the Publisher or Formatter are down, our client app will report the error to Jaeger. Jaeger will highlight all such errors in the UI corresponding to the failed span.
+
 ### Instrumenting the Servers
 
 Our servers are currently not instrumented for tracing. We need to do the following:

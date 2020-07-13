@@ -44,6 +44,7 @@ public class Hello {
             }
             return response.body().string();
         } catch (IOException e) {
+            Tags.ERROR.set(tracer.activeSpan(), true);
             throw new RuntimeException(e);
         }
     }

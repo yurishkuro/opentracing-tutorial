@@ -20,11 +20,11 @@ To test it out, run the formatter and publisher services in separate terminals
 
 ```
 # terminal 1
-$ node lesson03/solution/formatter.js
+$ node lesson04/solution/formatter.js
  * Running on http://localhost:8081/ (Press CTRL+C to quit)
 
 # terminal 3
-$ node lesson03/solution/publisher.js
+$ node lesson04/solution/publisher.js
  * Running on http://localhost:8082/ (Press CTRL+C to quit)
 ```
 
@@ -32,7 +32,7 @@ $ node lesson03/solution/publisher.js
 Finally, if we run the client app as we did in the previous lessons:
 
 ```
-$ node lesson03/solution/hello.js Peter Hello
+$ node lesson04/solution/hello.js Peter Hello
 INFO  Initializing Jaeger Tracer with CompositeReporter and ConstSampler
 Hello app listening on port 8080
 INFO  Reporting span b9b1b4d5b39165f0:c2af04baeb8fba28:b9b1b4d5b39165f0:1
