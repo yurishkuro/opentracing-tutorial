@@ -28,23 +28,28 @@ public class Hello {
 
     private String getHttp(int port, String path, String param, String value) {
         try {
+            Span aciveSpan = tracer.activeSpan();
             HttpUrl url = new HttpUrl.Builder().scheme("http").host("localhost").port(port).addPathSegment(path)
                     .addQueryParameter(param, value).build();
             Request.Builder requestBuilder = new Request.Builder().url(url);
 
-            Tags.SPAN_KIND.set(tracer.activeSpan(), Tags.SPAN_KIND_CLIENT);
-            Tags.HTTP_METHOD.set(tracer.activeSpan(), "GET");
-            Tags.HTTP_URL.set(tracer.activeSpan(), url.toString());
-            tracer.inject(tracer.activeSpan().context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
+            Tags.SPAN_KIND.set(aciveSpan, Tags.SPAN_KIND_CLIENT);
+            Tags.HTTP_METHOD.set(aciveSpan, "GET");
+            Tags.HTTP_URL.set(aciveSpan, url.toString());
+            tracer.inject(aciveSpan.context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
 
             Request request = requestBuilder.build();
             Response response = client.newCall(request).execute();
             if (response.code() != 200) {
+                Tags.ERROR.set(aciveSpan, true);
+                Tags.HTTP_STATUS.set(aciveSpan, response.code());
+                aciveSpan.log(ImmutableMap.of("event", "error", "value", "Response code not 200"));
                 throw new RuntimeException("Bad HTTP result: " + response);
             }
             return response.body().string();
         } catch (IOException e) {
             Tags.ERROR.set(tracer.activeSpan(), true);
+            tracer.activeSpan().log(ImmutableMap.of("event", "error", "value", e));
             throw new RuntimeException(e);
         }
     }

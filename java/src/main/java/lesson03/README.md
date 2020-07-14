@@ -131,6 +131,7 @@ Since we turned our single-binary program into a distributed application that ma
 ```java
 catch (IOException e) {
     Tags.ERROR.set(tracer.activeSpan(), true);
+    tracer.activeSpan().log(ImmutableMap.of("event", "error", "value", e));
     throw new RuntimeException(e);
 }
 ```

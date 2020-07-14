@@ -112,6 +112,24 @@ tags to the span with some metadata about the HTTP request, and we mark the span
 
 We need to add similar code to the `printHello` function.
 
+#### Handling Errors
+
+Since we turned our single-binary program into a distributed application that makes remote calls, we need to handle errors that may occur during communications. It is a good practice to tag the span with the tag `error=true` if the operation represented by the span failed. So, let's go ahead and update the `format_string` and `print_hello` function with below code snippet:
+
+```go
+resp, err := xhttp.Do(req)
+if err != nil {
+  ext.Error.Set(span, true)
+  span.LogFields(
+   log.String("event", "error"),
+   log.String("value", err.Error()),
+  )
+  panic(err.Error())
+}
+```
+
+If either of the Publisher or Formatter are down, our client app will report the error to Jaeger. Jaeger will highlight all such errors in the UI corresponding to the failed span.
+
 ### Instrumenting the Servers
 
 Our servers are currently not instrumented for tracing. We need to do the following:

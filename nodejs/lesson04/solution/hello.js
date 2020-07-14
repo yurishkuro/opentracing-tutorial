@@ -69,6 +69,10 @@ function http_get(fn, url, span) {
                 return data;
             }, e => {
                 span.setTag(Tags.ERROR, true)
+                span.log({
+                    'event': 'error',
+                    'value': e.message
+                });
                 span.finish();
                 throw e;
             });
