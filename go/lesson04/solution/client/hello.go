@@ -59,7 +59,8 @@ func formatString(ctx context.Context, helloTo string) string {
 
 	resp, err := xhttp.Do(req)
 	if err != nil {
-		spanError(span, err)
+		ext.LogError(span, err)
+		panic(err.Error())
 	}
 
 	helloStr := string(resp)
@@ -90,15 +91,7 @@ func printHello(ctx context.Context, helloStr string) {
 	span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
 
 	if _, err := xhttp.Do(req); err != nil {
-		spanError(span, err)
+		ext.LogError(span, err)
+		panic(err.Error())
 	}
-}
-
-func spanError(span opentracing.Span, err error) {
-	ext.Error.Set(span, true)
-	span.LogFields(
-		log.String("event", "error"),
-		log.String("value", err.Error()),
-	)
-	panic(err.Error())
 }

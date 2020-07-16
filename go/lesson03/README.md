@@ -119,11 +119,7 @@ Since we turned our single-binary program into a distributed application that ma
 ```go
 resp, err := xhttp.Do(req)
 if err != nil {
-  ext.Error.Set(span, true)
-  span.LogFields(
-   log.String("event", "error"),
-   log.String("value", err.Error()),
-  )
+  ext.LogError(span, err)
   panic(err.Error())
 }
 ```
