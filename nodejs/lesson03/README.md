@@ -54,3 +54,9 @@ Publisher app listening on port 8082
 Hello, Peter!
 INFO  Reporting span 80c31f112061d86e:f3211e5bb77c5f2b:e47ca83f948cb0c4:1
 ```
+
+#### Handling Errors
+
+Since we turned our single-binary program into a distributed application that makes remote calls, we need to handle errors that may occur during communications. It is a good practice to tag the span with the tag `error=true` if the operation represented by the span failed. We have handled errors in the `error` section of the `http_get` function.
+
+If either of the Publisher or Formatter are down, our client app will report the error to Jaeger. Jaeger will highlight all such errors in the UI corresponding to the failed span.

@@ -27,9 +27,10 @@ function sayHello(helloTo, greeting) {
             	span.finish();
         	})
         	.catch( err => {
-            	span.setTag(Tags.ERROR, true)
+                span.setTag(Tags.ERROR, true) 
             	span.setTag(Tags.HTTP_STATUS_CODE, err.statusCode || 500);
-            	span.finish();
+                span.finish();
+                throw err;
         	});
     });
 
@@ -47,7 +48,7 @@ function format_string(input) {
         'value': input
     });
     
-    return http_get(fn, url, span); 
+    return http_get(url, span); 
 }  
 
 function print_hello(input) {
@@ -62,10 +63,10 @@ function print_hello(input) {
         'value': input
     });
 
-    return http_get(fn, url, span);
+    return http_get(url, span);
 }
 
-function http_get(fn, url, span) {
+function http_get(url, span) {
     const method = 'GET';
     const headers = {};
     
@@ -80,6 +81,11 @@ function http_get(fn, url, span) {
                 span.finish();
                 return data;
             }, e => {
+                span.setTag(Tags.ERROR, true)
+                span.log({
+                    'event': 'error',
+                    'error.object': e
+                });
                 span.finish();
                 throw e;
             });

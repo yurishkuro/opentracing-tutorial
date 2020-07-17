@@ -87,10 +87,11 @@ request we need to call `tracer.inject` before building the HTTP request in `Hel
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 
-Tags.SPAN_KIND.set(tracer.activeSpan(), Tags.SPAN_KIND_CLIENT);
-Tags.HTTP_METHOD.set(tracer.activeSpan(), "GET");
-Tags.HTTP_URL.set(tracer.activeSpan(), url.toString());
-tracer.inject(tracer.activeSpan().context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
+Span activeSpan = tracer.activeSpan();
+Tags.SPAN_KIND.set(activeSpan, Tags.SPAN_KIND_CLIENT);
+Tags.HTTP_METHOD.set(activeSpan, "GET");
+Tags.HTTP_URL.set(activeSpan, url.toString());
+tracer.inject(activeSpan.context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
 ```
 
 In this case the `carrier` is HTTP request headers object, which we adapt to the carrier API
@@ -124,6 +125,19 @@ public class RequestBuilderCarrier implements io.opentracing.propagation.TextMap
 Notice that we also add a couple additional tags to the span with some metadata about the HTTP request,
 and we mark the span with a `span.kind=client` tag, as recommended by the OpenTracing
 [Semantic Conventions][semantic-conventions]. There are other tags we could add.
+
+#### Handling Errors
+Since we turned our single-binary program into a distributed application that makes remote calls, we need to handle errors that may occur during communications. It is a good practice to tag the span with the tag `error=true` if the operation represented by the span failed. So, let's go ahead and update the `catch` section of `get_http` function with below code snippet:
+
+```java
+catch (IOException e) {
+    Tags.ERROR.set(tracer.activeSpan(), true);
+    tracer.activeSpan().log(ImmutableMap.of(Fields.EVENT, "error", Fields.ERROR_OBJECT, e));
+    throw new RuntimeException(e);
+}
+```
+
+If either of the Publisher or Formatter are down, our client app will report the error to Jaeger. Jaeger will highlight all such errors in the UI corresponding to the failed span.
 
 ### Instrumenting the Servers
 

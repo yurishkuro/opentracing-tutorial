@@ -8,7 +8,7 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/yurishkuro/opentracing-tutorial/go/lib/http"
+	xhttp "github.com/yurishkuro/opentracing-tutorial/go/lib/http"
 	"github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
 )
 
