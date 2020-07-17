@@ -7,7 +7,6 @@ import (
 	"os"
 
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	xhttp "github.com/yurishkuro/opentracing-tutorial/go/lib/http"
 	"github.com/yurishkuro/opentracing-tutorial/go/lib/tracing"
@@ -48,7 +47,6 @@ func formatString(ctx context.Context, helloTo string) string {
 
 	resp, err := xhttp.Do(req)
 	if err != nil {
-		ext.Error.Set(span, true)
 		panic(err.Error())
 	}
 
@@ -75,7 +73,6 @@ func printHello(ctx context.Context, helloStr string) {
 	}
 
 	if _, err := xhttp.Do(req); err != nil {
-		ext.Error.Set(span, true)
 		panic(err.Error())
 	}
 }

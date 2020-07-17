@@ -87,10 +87,11 @@ request we need to call `tracer.inject` before building the HTTP request in `Hel
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 
-Tags.SPAN_KIND.set(tracer.activeSpan(), Tags.SPAN_KIND_CLIENT);
-Tags.HTTP_METHOD.set(tracer.activeSpan(), "GET");
-Tags.HTTP_URL.set(tracer.activeSpan(), url.toString());
-tracer.inject(tracer.activeSpan().context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
+Span activeSpan = tracer.activeSpan();
+Tags.SPAN_KIND.set(activeSpan, Tags.SPAN_KIND_CLIENT);
+Tags.HTTP_METHOD.set(activeSpan, "GET");
+Tags.HTTP_URL.set(activeSpan, url.toString());
+tracer.inject(activeSpan.context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
 ```
 
 In this case the `carrier` is HTTP request headers object, which we adapt to the carrier API
@@ -131,7 +132,7 @@ Since we turned our single-binary program into a distributed application that ma
 ```java
 catch (IOException e) {
     Tags.ERROR.set(tracer.activeSpan(), true);
-    tracer.activeSpan().log(ImmutableMap.of("event", "error", "value", e));
+    tracer.activeSpan().log(ImmutableMap.of(Fields.EVENT, "error", Fields.ERROR_OBJECT, e));
     throw new RuntimeException(e);
 }
 ```

@@ -8,6 +8,7 @@ import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
+import io.opentracing.tag.Tags;
 import lib.Tracing;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -31,6 +32,8 @@ public class Hello {
             Request.Builder requestBuilder = new Request.Builder().url(url);
             Request request = requestBuilder.build();
             Response response = client.newCall(request).execute();
+
+            Tags.HTTP_STATUS.set(tracer.activeSpan(), response.code());
             if (response.code() != 200) {
                 throw new RuntimeException("Bad HTTP result: " + response);
             }

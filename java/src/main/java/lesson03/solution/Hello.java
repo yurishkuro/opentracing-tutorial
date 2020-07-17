@@ -1,6 +1,5 @@
 package lesson03.solution;
 
-import java.io.IOException;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -14,6 +13,7 @@ import lib.Tracing;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import io.opentracing.log.Fields;
 import okhttp3.Response;
 
 public class Hello {
@@ -28,28 +28,27 @@ public class Hello {
 
     private String getHttp(int port, String path, String param, String value) {
         try {
-            Span aciveSpan = tracer.activeSpan();
             HttpUrl url = new HttpUrl.Builder().scheme("http").host("localhost").port(port).addPathSegment(path)
                     .addQueryParameter(param, value).build();
             Request.Builder requestBuilder = new Request.Builder().url(url);
-
-            Tags.SPAN_KIND.set(aciveSpan, Tags.SPAN_KIND_CLIENT);
-            Tags.HTTP_METHOD.set(aciveSpan, "GET");
-            Tags.HTTP_URL.set(aciveSpan, url.toString());
-            tracer.inject(aciveSpan.context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
+            
+            Span activeSpan = tracer.activeSpan();
+            Tags.SPAN_KIND.set(activeSpan, Tags.SPAN_KIND_CLIENT);
+            Tags.HTTP_METHOD.set(activeSpan, "GET");
+            Tags.HTTP_URL.set(activeSpan, url.toString());
+            tracer.inject(activeSpan.context(), Format.Builtin.HTTP_HEADERS, new RequestBuilderCarrier(requestBuilder));
 
             Request request = requestBuilder.build();
             Response response = client.newCall(request).execute();
+
+            Tags.HTTP_STATUS.set(activeSpan, response.code());
             if (response.code() != 200) {
-                Tags.ERROR.set(aciveSpan, true);
-                Tags.HTTP_STATUS.set(aciveSpan, response.code());
-                aciveSpan.log(ImmutableMap.of("event", "error", "value", "Response code not 200"));
                 throw new RuntimeException("Bad HTTP result: " + response);
             }
             return response.body().string();
-        } catch (IOException e) {
+        } catch (Exception e) {
             Tags.ERROR.set(tracer.activeSpan(), true);
-            tracer.activeSpan().log(ImmutableMap.of("event", "error", "value", e));
+            tracer.activeSpan().log(ImmutableMap.of(Fields.EVENT, "error", Fields.ERROR_OBJECT, e));
             throw new RuntimeException(e);
         }
     }
