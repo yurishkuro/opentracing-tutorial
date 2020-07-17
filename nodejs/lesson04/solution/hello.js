@@ -21,6 +21,7 @@ function sayHello(helloTo, greeting) {
             span.finish();
         })
         .catch( err => {
+            span.setTag(Tags.ERROR, true) 
             span.setTag(Tags.HTTP_STATUS_CODE, err.statusCode || 500);
             span.finish();
             throw err;
@@ -38,7 +39,7 @@ function format_string(input, root_span) {
         'value': input
     });
 
-    return http_get(fn, url, span); 
+    return http_get(url, span); 
 }  
 
 function print_hello(input, root_span) {
@@ -50,10 +51,10 @@ function print_hello(input, root_span) {
         'event': 'print-string',
         'value': input
     });
-    return http_get(fn, url, span);
+    return http_get(url, span);
 }
 
-function http_get(fn, url, span) {
+function http_get(url, span) {
     const method = 'GET';
     const headers = {};
     
@@ -71,7 +72,7 @@ function http_get(fn, url, span) {
                 span.setTag(Tags.ERROR, true)
                 span.log({
                     'event': 'error',
-                    'value': e.message
+                    'error.object': e
                 });
                 span.finish();
                 throw e;
