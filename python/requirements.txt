@@ -1,4 +1,4 @@
-jaeger-client>=3.8,<4
+jaeger-client>=4.3,<5
 
 requests
 flask
