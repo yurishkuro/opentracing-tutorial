@@ -226,7 +226,7 @@ Now change the `FormatterResource` handler method to use `startServerSpan`:
 @GET
 public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
     Span span = startServerSpan(tracer, httpHeaders, "format");
-    try (Scope scope = tracer.scopeManager.activate(span)) {
+    try (Scope scope = tracer.scopeManager().activate(span)) {
         String helloStr = String.format("Hello, %s!", helloTo);
         span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
