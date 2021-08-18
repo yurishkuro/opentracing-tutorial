@@ -180,8 +180,7 @@ private Formatter(Tracer tracer) {
 Replace the call to `Formatter.run()` with this:
 
 ```java
-Tracer tracer = Tracing.init("formatter");
-new Formatter(tracer).run(args);
+new Formatter(Tracing.init("formatter")).run(args);
 ```
 
 #### Extract the span context from the incoming request using `tracer.extract`
