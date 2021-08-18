@@ -52,8 +52,6 @@ public class Publisher extends Application<Configuration> {
     public static void main(String[] args) throws Exception {
         System.setProperty("dw.server.applicationConnectors[0].port", "8082");
         System.setProperty("dw.server.adminConnectors[0].port", "9082");
-        try (JaegerTracer tracer = Tracing.init("publisher")) {
-            new Publisher(tracer).run(args);
-        }
+        new Publisher(Tracing.init("publisher")).run(args);
     }
 }
