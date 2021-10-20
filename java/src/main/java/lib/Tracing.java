@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 import io.jaegertracing.Configuration;
@@ -38,7 +39,7 @@ public final class Tracing {
         return config.getTracer();
     }
 
-    public static Span startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders, String operationName) {
+    public static Span startServerSpan(Tracer tracer, HttpHeaders httpHeaders, String operationName) {
         // format the headers for extraction
         MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
         final HashMap<String, String> headers = new HashMap<String, String>();
