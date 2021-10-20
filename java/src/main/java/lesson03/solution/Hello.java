@@ -3,17 +3,16 @@ package lesson03.solution;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
+import io.opentracing.log.Fields;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import lib.Tracing;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import io.opentracing.log.Fields;
 import okhttp3.Response;
 
 public class Hello {
@@ -92,7 +91,7 @@ public class Hello {
         }
 
         String helloTo = args[0];
-        try (JaegerTracer tracer = Tracing.init("hello-world")) {
+        try (Tracer tracer = Tracing.init("hello-world")) {
             new Hello(tracer).sayHello(helloTo);
         }
     }

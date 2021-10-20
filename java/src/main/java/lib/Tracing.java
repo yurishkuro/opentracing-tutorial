@@ -9,7 +9,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import io.jaegertracing.Configuration;
 import io.jaegertracing.Configuration.ReporterConfiguration;
 import io.jaegertracing.Configuration.SamplerConfiguration;
-import io.jaegertracing.internal.JaegerTracer;
 import io.jaegertracing.internal.samplers.ConstSampler;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -24,7 +23,7 @@ public final class Tracing {
     private Tracing() {
     }
 
-    public static JaegerTracer init(String service) {
+    public static Tracer init(String service) {
         SamplerConfiguration samplerConfig = SamplerConfiguration.fromEnv()
                 .withType(ConstSampler.TYPE)
                 .withParam(1);
