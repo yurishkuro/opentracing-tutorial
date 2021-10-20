@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -82,7 +81,7 @@ public class Hello {
         }
 
         String helloTo = args[0];
-        try (JaegerTracer tracer = Tracing.init("hello-world")) {
+        try (Tracer tracer = Tracing.init("hello-world")) {
             new Hello(tracer).sayHello(helloTo);
         }
     }

@@ -4,21 +4,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 import io.jaegertracing.Configuration;
 import io.jaegertracing.Configuration.ReporterConfiguration;
 import io.jaegertracing.Configuration.SamplerConfiguration;
-import io.jaegertracing.internal.JaegerTracer;
 import io.jaegertracing.internal.samplers.ConstSampler;
-import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.propagation.TextMapAdapter;
-import io.opentracing.propagation.TextMapExtractAdapter;
 import io.opentracing.tag.Tags;
 import okhttp3.Request;
 
@@ -26,7 +24,7 @@ public final class Tracing {
     private Tracing() {
     }
 
-    public static JaegerTracer init(String service) {
+    public static Tracer init(String service) {
         SamplerConfiguration samplerConfig = SamplerConfiguration.fromEnv()
                 .withType(ConstSampler.TYPE)
                 .withParam(1);
@@ -41,7 +39,7 @@ public final class Tracing {
         return config.getTracer();
     }
 
-    public static Span startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders, String operationName) {
+    public static Span startServerSpan(Tracer tracer, HttpHeaders httpHeaders, String operationName) {
         // format the headers for extraction
         MultivaluedMap<String, String> rawHeaders = httpHeaders.getRequestHeaders();
         final HashMap<String, String> headers = new HashMap<String, String>();
