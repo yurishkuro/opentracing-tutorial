@@ -13,28 +13,15 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <jaeger.version>1.6.0</jaeger.version>
-        <guava.version>30.1.1-jre</guava.version>
         <dropwizard.version>2.1.0-beta.4</dropwizard.version>
         <okhttp.version>4.9.1</okhttp.version>
-        <logback.version>1.2.6</logback.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-opentracing-shim</artifactId>
-            <version>1.7.0-alpha</version>
-        </dependency>
-        
-        <dependency>
             <groupId>io.jaegertracing</groupId>
             <artifactId>jaeger-client</artifactId>
             <version>${jaeger.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>
@@ -45,11 +32,6 @@
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <version>${okhttp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
         </dependency>
     </dependencies>
 </project>
