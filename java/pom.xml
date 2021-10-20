@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <name>java-opentracing-tutorial</name>
@@ -10,17 +9,23 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
-        <jaeger.version>1.1.0</jaeger.version>
-        <guava.version>23.0</guava.version>
-        <dropwizard.version>1.1.4</dropwizard.version>
-        <okhttp.version>3.9.0</okhttp.version>
-        <logback.version>1.2.1</logback.version>
+        <jaeger.version>1.6.0</jaeger.version>
+        <guava.version>30.1.1-jre</guava.version>
+        <dropwizard.version>2.1.0-beta.4</dropwizard.version>
+        <okhttp.version>4.9.1</okhttp.version>
+        <logback.version>1.2.6</logback.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-opentracing-shim</artifactId>
+            <version>1.7.0-alpha</version>
+        </dependency>
+        
         <dependency>
             <groupId>io.jaegertracing</groupId>
             <artifactId>jaeger-client</artifactId>

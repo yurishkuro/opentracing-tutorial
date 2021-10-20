@@ -17,8 +17,10 @@ for jar in $(ls target/dependency/*.jar target/java-opentracing-tutorial-*.jar);
   CLASSPATH=$CLASSPATH:$jar
 done
 
+# Between Java 8 and 11 (not inclusive), we needed to add java.xml.bind to the list of modules to load
+JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 ADD_MODULES=""
-if [ "$(java -version 2>&1 | head -1 | grep '\"1\.[78].\+\"')" = "" ]; then
+if [[ "$version" > "1.8" ]] && [[ "$version" < "11" ]]; then
   ADD_MODULES="--add-modules=java.xml.bind"
 fi
 
