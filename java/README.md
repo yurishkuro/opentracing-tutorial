@@ -33,3 +33,7 @@ All subsequent commands in the tutorials should be executed relative to this `ja
   * Use baggage to pass data through the call graph
 * [Extra Credit](./src/main/java/extracredit)
   * Use existing open source instrumentation
+
+## OpenTelemetry
+
+If you are interested in using the OpenTelemetry SDK as the OpenTracing tracer implementation instead of the Jaeger client, check out the blog post ["Migrating from Jaeger client to OpenTelemetry SDK"](https://medium.com/jaegertracing/migrating-from-jaeger-client-to-opentelemetry-sdk-bd337d796759), which uses the lesson 4 as example.
