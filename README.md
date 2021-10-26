@@ -17,6 +17,11 @@ Also check out examples from the book [Mastering Distributed Tracing](https://ww
 * [Chapter 11: Integration with Metrics and Logs](https://github.com/PacktPublishing/Mastering-Distributed-Tracing/tree/master/Chapter11)
 * [Chapter 12: Gathering Insights Through Data Mining](https://github.com/PacktPublishing/Mastering-Distributed-Tracing/tree/master/Chapter12)
 
+### OpenTelemetry
+
+The tutorials in this repository are still useful when learning about distributed tracing, but using the [OpenTelemetry](https://opentelemetry.io/) API should be preferred over the OpenTracing API for new applications.
+
+The blog post ["Migrating from Jaeger client to OpenTelemetry SDK"](https://medium.com/jaegertracing/migrating-from-jaeger-client-to-opentelemetry-sdk-bd337d796759) can also be used as a reference on how to use the OpenTelemetry SDK as an OpenTracing tracer implementation.
 
 ## Prerequisites
 
