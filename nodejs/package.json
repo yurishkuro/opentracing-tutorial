@@ -10,7 +10,7 @@
   "dependencies": {
     "cls-bluebird": "^2.0.1",
     "continuation-local-storage": "^3.2.0",
-    "express": "^4.16",
+    "express": "^4.17",
     "jaeger-client": "^3.10.0",
     "opentracing": "latest",
     "request-promise": "latest",
